@@ -203,13 +203,13 @@ class Cadrillage extends JPanel {
                 Cadrillage.add(nouvelleCase);
             }
         }
-        
-        System.out.println(Cadrillage);
 
-        // Création de la liste des voisins
+        // Création de la liste des voisins (9 cases)
         for (int i = 0; i < NombreLignes; i++) {
             for (int j = 0; j < NombreColonnes; j++) {
+            	// Identification de la case avec NumCase
                 int NumCase = i * NombreColonnes + j;
+                //case est un mot clé donc on utilise c
                 Case c = Cadrillage.get(NumCase);
                 calculerVoisins(c, NombreColonnes, NombreLignes, Cadrillage);
             }
@@ -218,7 +218,7 @@ class Cadrillage extends JPanel {
 	
 	  
     public void calculerVoisins(Case Case, int NombreColonnes, int NombreLignes, ArrayList<Case> Cadrillage) {
-    	// Récupération des infos
+    	// Récupération des infos 
         int X = Case.X;
         int Y = Case.Y;
         int NumCase = Case.NumCase;
@@ -234,6 +234,7 @@ class Cadrillage extends JPanel {
             int VoisinY = Y + deplacement[1] * CaseHauteur;
             
             // Vérification si le voisin est dans les limites du cadrillage
+            // A faire si les oiseau "rebondissent" sur les bords
             if (VoisinY >= 0 && VoisinY < NombreLignes * CaseHauteur &&
             		VoisinX >= 0 && VoisinX < NombreColonnes * CaseLargeur) {
             	
@@ -249,7 +250,6 @@ class Cadrillage extends JPanel {
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        //case est un mot clé donc on utilise c
         for (Case c : Cadrillage) {  
         	c.dessiner(g2d);
         }
@@ -378,40 +378,32 @@ public class SimulationNuageOiseaux {
     private static boolean isPaused = false;
 
     public static void main(String[] args) {
-        int LargeurEcran = 1440; //1440
-        int HauteurEcran = 800;  //880
-        int PannelSpace = 80; //80
+    	// Réglage de PA : 1920x900 et 80 de PannelSpace
+        int LargeurEcran = 1920; 
+        int HauteurEcran = 880;  
+        int PannelSpace = 80; 
         
         // Paramètre par défault
         JFrame frame = new JFrame("Simulation Nuage d'Oiseaux");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(LargeurEcran, HauteurEcran+PannelSpace);
         
-        int CaseLargeur = 10; 
-        int CaseHauteur = 10; 
+        int CaseLargeur = 20; 
+        int CaseHauteur = 20; 
         
         int NombreColonnes = LargeurEcran/CaseLargeur; 
         int NombreLignes = HauteurEcran/CaseHauteur; 
         
-        // Créer un panneau pour le cadrillage
+        // Création du Cadrillage
         // Rappel : Cadrillage(int LargeurEcran, int HauteurEcran, int NombreColonnes, int NombreLignes)
         Cadrillage cadrillage = new Cadrillage(CaseLargeur, CaseHauteur, NombreColonnes, NombreLignes);
+        // Ajouter l'affichage
         //frame.add(cadrillage);
         
         // Créer un nuage d'oiseaux sur le cadrillage
         NuageOiseaux nuageOiseaux = new NuageOiseaux(50, cadrillage); // Nombre d'oiseaux initial (à revoir)
-        //frame.add(nuageOiseaux);
+        frame.add(nuageOiseaux);
         
-        // Créer un panneau de superposition
-        JPanel overlayPanel = new JPanel();
-        overlayPanel.setLayout(new OverlayLayout(overlayPanel));
-
-        // Ajouter les composants au panneau de superposition
-        overlayPanel.add(cadrillage);
-        overlayPanel.add(nuageOiseaux);
-
-        // Ajouter le panneau de superposition à la fenêtre
-        frame.add(overlayPanel);
         
         // Ajout d'un bouton de pause
         JButton pauseButton = new JButton("Pause");
