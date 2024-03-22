@@ -398,11 +398,11 @@ public class SimulationNuageOiseaux {
         // Rappel : Cadrillage(int LargeurEcran, int HauteurEcran, int NombreColonnes, int NombreLignes)
         Cadrillage cadrillage = new Cadrillage(CaseLargeur, CaseHauteur, NombreColonnes, NombreLignes);
         // Ajouter l'affichage
-        //frame.add(cadrillage);
+        frame.add(cadrillage);
         
         // Créer un nuage d'oiseaux sur le cadrillage
         NuageOiseaux nuageOiseaux = new NuageOiseaux(50, cadrillage); // Nombre d'oiseaux initial (à revoir)
-        frame.add(nuageOiseaux);
+        //frame.add(nuageOiseaux);
         
         
         // Ajout d'un bouton de pause
@@ -410,7 +410,7 @@ public class SimulationNuageOiseaux {
         pauseButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 isPaused = !isPaused;
-                nuageOiseaux.setPause(isPaused);
+                //nuageOiseaux.setPause(isPaused);
             }
         });
 
@@ -421,7 +421,7 @@ public class SimulationNuageOiseaux {
         speedSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 int Vitesse = speedSlider.getValue();
-                nuageOiseaux.setSpeed(Vitesse);
+                //nuageOiseaux.setSpeed(Vitesse);
             }
         });
 
@@ -435,7 +435,7 @@ public class SimulationNuageOiseaux {
             public void actionPerformed(ActionEvent e) {
                 try {
                     int NombreOiseaux = Integer.parseInt(nbrOiseauxField.getText());
-                    nuageOiseaux.setNbrOiseaux(NombreOiseaux); 
+                    //nuageOiseaux.setNbrOiseaux(NombreOiseaux); 
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Veuillez entrer un nombre valide.", "Erreur", JOptionPane.ERROR_MESSAGE);
                 }
