@@ -64,54 +64,54 @@ class Oiseau {
     }
 
     
-    // à faire
-//    public void Répulsion(double Xo, double Yo, double dt) {
-//    	   
-//        double kr = 1; //Coefficient de répulsion
-//
-//        double dx = this.x-Xo;
-//        double dy = this.y-Yo;
-//
-//        double r = Math.sqrt(dx*dx+dy*dy); //Distance entre le Boid considéré et le Boid de coordonnées (Xo,Yo)
-//        
-//        this.vx = this.vx+kr*dt*dx/Math.pow(r,3); 
-//        this.vy = this.vy+kr*dt*dy/Math.pow(r,3); //Mise à jour de la vitesse
-//
-//        this.x = this.x+dt*this.vx;
-//        this.y = this.y+dt*this.vy; //Mise à jour de la position
-//    }
+    public void Repulsion(double Xo, double Yo, double dt) {
+    	   
+        double CoeffRepulsion = 1; 
+
+        double dx = x-Xo;
+        double dy = y-Yo;
+
+        double r = Math.sqrt(dx*dx+dy*dy); //Distance entre le Boid considéré et le Boid de coordonnées (Xo,Yo)
+        
+        //Mise à jour de la vitesse
+        this.vx = this.vx+CoeffRepulsion*dt*dx/Math.pow(r,3); 
+        this.vy = this.vy+CoeffRepulsion*dt*dy/Math.pow(r,3); 
+
+        this.x = this.x+dt*this.vx;
+        this.y = this.y+dt*this.vy; //Mise à jour de la position
+    }
     
     
     // à faire
-//    public void Alignement(double Vox, double Voy) {
-//    	
-//	      double kal=1/8; //Coefficient d'alignement (kal < 1)
-//	
-//	      double N=Math.sqrt(this.vx*this.vx+this.vy*this.vy); //Norme de la vitesse du Boid considéré
-//	      double No=Math.sqrt(Vox*Vox+Voy*Voy); //Norme de la vitesse du Boid de vitesse (Vxo,Vyo)
-//	
-//	      this.vx=N*(this.vx/N+kal*Vox/No)/Math.sqrt((this.vx/N+kal*Vox/No)*(this.vx/N+kal*Vox/No)+(this.vy/N+kal*Voy/No)*(this.vy/N+kal*Voy/No)); //Variation de vx
-//	      this.vy=N*(this.vy/N+kal*Voy/No)/Math.sqrt((this.vx/N+kal*Vox/No)*(this.vx/N+kal*Vox/No)+(this.vy/N+kal*Voy/No)*(this.vy/N+kal*Voy/No)); //Variation de vy
-//	      //Remarque: la norme de v est inchangée!
-//	}
+    public void Alignement(double Vox, double Voy) {
+    	
+	      double kal=1/8; //Coefficient d'alignement (kal < 1)
+	
+	      double N=Math.sqrt(this.vx*this.vx+this.vy*this.vy); //Norme de la vitesse du Boid considéré
+	      double No=Math.sqrt(Vox*Vox+Voy*Voy); //Norme de la vitesse du Boid de vitesse (Vxo,Vyo)
+	
+	      this.vx=N*(this.vx/N+kal*Vox/No)/Math.sqrt((this.vx/N+kal*Vox/No)*(this.vx/N+kal*Vox/No)+(this.vy/N+kal*Voy/No)*(this.vy/N+kal*Voy/No)); //Variation de vx
+	      this.vy=N*(this.vy/N+kal*Voy/No)/Math.sqrt((this.vx/N+kal*Vox/No)*(this.vx/N+kal*Vox/No)+(this.vy/N+kal*Voy/No)*(this.vy/N+kal*Voy/No)); //Variation de vy
+	      //Remarque: la norme de v est inchangée!
+	}
   
     
     //à faire
-//    public void Attraction(double Xo, double Yo, double dt) {
-//	  
-//	      double kat=1; //Coefficient d'attraction
-//	
-//	      double dx = this.x-Xo;
-//	      double dy = this.y-Yo;
-//	
-//	      double r = Math.sqrt(dx*dx+ dy*dy); //Distance entre les Boids
-//	
-//	      this.vx=this.vx+kat*dt*-dx/Math.pow(r,3);
-//	      this.vy=this.vy+kat*dt*-dy/Math.pow(r,3); //Mise à jour de la vitesse
-//	      
-//	      this.x = this.x+dt*this.vx;
-//	      this.y = this.y+dt*this.vy; //Mise à jour de la position
-//  }
+    public void Attraction(double Xo, double Yo, double dt) {
+	  
+	      double kat=1; //Coefficient d'attraction
+	
+	      double dx = this.x-Xo;
+	      double dy = this.y-Yo;
+	
+	      double r = Math.sqrt(dx*dx+ dy*dy); //Distance entre les Boids
+	
+	      this.vx=this.vx+kat*dt*-dx/Math.pow(r,3);
+	      this.vy=this.vy+kat*dt*-dy/Math.pow(r,3); //Mise à jour de la vitesse
+	      
+	      this.x = this.x+dt*this.vx;
+	      this.y = this.y+dt*this.vy; //Mise à jour de la position
+  }
     
     
     public void dessiner(Graphics g) {
@@ -260,6 +260,12 @@ class NuageOiseaux extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
     boolean isPaused = false;
+    int Vitesse = 5; // Vitesse des oiseaux par défaut
+	int NombreOiseaux;
+	
+	int DistRepulsion = 10;
+	int DistAlignement = 15;
+	int DistAttraction = 20;
     
     ArrayList<Oiseau> NuageOiseaux;
     int CaseLargeur, CaseHauteur;
@@ -285,6 +291,7 @@ class NuageOiseaux extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 if (!isPaused) {
                     DeplacerOiseaux();
+                    Boid();
                     repaint(); // Redessiner la fenêtre
                 }
             }
@@ -292,10 +299,6 @@ class NuageOiseaux extends JPanel {
 
         timer.start();
     }
-    
-   
-	int Vitesse = 5; // Vitesse des oiseaux par défaut
-	int NombreOiseaux;
 	
     
     public void DeplacerOiseaux() {
@@ -343,14 +346,37 @@ class NuageOiseaux extends JPanel {
     }
      
     
-    // à faire
-//    public void Boid() {
-//		for (Oiseau oiseau : NuageOiseaux) {
-//	        oiseau.Répulsion(double Xo, double Yo, double dt);
-//	        oiseau.Alignement(double Vox, double Voy);
-//	        oiseau.Attraction(double Xo, double Yo, double dt);
-//	    }
-//	}
+    public void Boid() {
+		for (Oiseau oiseau1 : NuageOiseaux) {
+			double x1 = oiseau1.x;
+			double y1 = oiseau1.y;
+			int NumCase1 = oiseau1.NumCase;
+			
+			for (Oiseau oiseau2 : NuageOiseaux) {
+				int NumCase2 = oiseau2.NumCase;
+				
+				if (NumCase1 == NumCase2) {
+					double x2 = oiseau2.x;
+					double y2 = oiseau2.y;
+					
+					double distance = Math.sqrt(Math.pow((x1-x2),2) + Math.pow((y1-y2),2));
+					
+					if (distance < DistRepulsion) {
+						oiseau1.Repulsion(double x1, double y1, double x2, double y2);
+					}
+					
+					else if (distance < DistAlignement) {
+						oiseau1.Alignement(double x1, double y1, double x2, double y2);
+					}
+					
+					else if (distance < DistAttraction) {
+						oiseau1.Attraction(double x1, double y1, double x2, double y2);
+					}
+	
+				}
+			}
+	    }
+	}
     
     
     public void paintComponent(Graphics g) {
@@ -426,10 +452,10 @@ public class SimulationNuageOiseaux {
         });
 
         // Ajout d'un champ de texte pour entrer le nombre d'oiseaux
-        // La taille du champ de texte est limitée à 3 caractères
-        JTextField nbrOiseauxField = new JTextField(3);
-        //Définit une valeur par défaut de 5 oiseaux
-        nbrOiseauxField.setText("5");  
+        // La taille du champ de texte est limitée à 5 (unité ?)
+        JTextField nbrOiseauxField = new JTextField(5);
+        //Définit une valeur par défaut de 10 oiseaux
+        nbrOiseauxField.setText("10");  
 
         // Ajout d'un bouton pour appliquer le changement
         JButton applyButton = new JButton("Appliquer");
@@ -438,8 +464,12 @@ public class SimulationNuageOiseaux {
             	// Lorsque ce bouton est cliqué
                 try { 
                 	// On récupère le nombre d'oiseaux entré dans le champ de texte
-                    int NombreOiseaux = Integer.parseInt(nbrOiseauxField.getText());
-                    nuageOiseaux.setNbrOiseaux(NombreOiseaux); 
+                	int NombreOiseaux = Integer.parseInt(nbrOiseauxField.getText());
+                	if (NombreOiseaux > 10000) {
+                        JOptionPane.showMessageDialog(frame, "Veuillez entrer un nombre entre 1 et 10000.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                        return; }
+                	else {
+	                    nuageOiseaux.setNbrOiseaux(NombreOiseaux); }
                 // Si un nombre non valide est entré
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Veuillez entrer un nombre valide.", "Erreur", JOptionPane.ERROR_MESSAGE);
