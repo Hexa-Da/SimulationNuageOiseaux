@@ -25,19 +25,15 @@ class Oiseau {
     	
         this.x = x;
         this.y = y;
+        this.NumCase = NumCase;
        
         // Choix de la direction : (random.nextBoolean() ? 1 : -1)
-        // Choix de la norme entre 0 et 1 : random.nextInt(1)
+        // Choix de la norm entre 0 et 1 inclus : random.nextInt(101)/100
         Random random = new Random();
-        this.vx = (random.nextBoolean() ? 1 : -1) * random.nextInt(1);
-        this.vy = (random.nextBoolean() ? 1 : -1) * random.nextInt(1);
-        
-        this.NumCase = NumCase;
+        this.vx = (random.nextBoolean() ? 1 : -1) * (double) random.nextInt(101)/100;
+        this.vy = (random.nextBoolean() ? 1 : -1) * (double) random.nextInt(101)/100;
     }
     
-    
-
-
     
     public void deplacer(int vitesse, int largeur, int hauteur) {
 
@@ -263,32 +259,26 @@ class Cadrillage extends JPanel {
 class NuageOiseaux extends JPanel { 
 	private static final long serialVersionUID = 1L;
 	
-    ArrayList<Oiseau> NuageOiseaux;
     boolean isPaused = false;
-    int Vitesse = 5; // Vitesse par défaut
-    int NombreOiseaux; 
     
+    ArrayList<Oiseau> NuageOiseaux;
     int CaseLargeur, CaseHauteur;
 	int NombreColonnes, NombreLignes;
-	
+	int largeur,hauteur;
 	public Cadrillage cadrillage;
     
-    public NuageOiseaux(int NombreOiseaux, Cadrillage cadrillage) {
+    public NuageOiseaux(Cadrillage cadrillage) {
     	this.cadrillage = cadrillage;
-        this.NuageOiseaux = new ArrayList<>();
-    	this.NombreOiseaux = NombreOiseaux;   
+        this.NuageOiseaux = new ArrayList<>();  
     	
+    	// Récupération des infos
     	this.CaseHauteur = cadrillage.CaseHauteur; 
     	this.CaseLargeur = cadrillage.CaseLargeur;
     	this.NombreColonnes = cadrillage.NombreColonnes; 
     	this.NombreLignes = cadrillage.NombreLignes;
-        	
-        for (int i = 0; i < NombreOiseaux; i++) {
-            double x = Math.random() * getWidth();
-            double y = Math.random() * getHeight();
-            int NumCase = Coord_to_Num((double) x, (double) y);
-            NuageOiseaux.add(new Oiseau((double) x, (double) y, (int) NumCase));
-        }
+    	this.largeur = CaseLargeur * NombreColonnes;
+    	this.hauteur = CaseHauteur * NombreLignes;
+    
         
         // Créer une minuterie pour mettre à jour la simulation toutes les 10 millisecondes
         Timer timer = new Timer(10, new ActionListener() {
@@ -302,13 +292,16 @@ class NuageOiseaux extends JPanel {
 
         timer.start();
     }
- 
+    
+   
+	int Vitesse = 5; // Vitesse des oiseaux par défaut
+	int NombreOiseaux;
+	
     
     public void DeplacerOiseaux() {
-    	int largeur = CaseLargeur * NombreColonnes;
-    	int hauteur = CaseHauteur * NombreLignes;
         for (Oiseau oiseau : NuageOiseaux) {
             oiseau.deplacer(Vitesse,largeur,hauteur);
+            // il faut un màj de la case
             int NumCase = Coord_to_Num((double) oiseau.x, (double) oiseau.y);
             oiseau.NumCase = NumCase;
         }
@@ -339,6 +332,7 @@ class NuageOiseaux extends JPanel {
      
     
     public void updateOiseaux() {
+    	// On Ccréé ou recréé une simulation
         NuageOiseaux.clear();
         for (int i = 0; i < NombreOiseaux; i++) {
             double x = Math.random() * getWidth();
@@ -378,9 +372,10 @@ public class SimulationNuageOiseaux {
     private static boolean isPaused = false;
 
     public static void main(String[] args) {
-    	// Réglage de PA : 1920x900 et 80 de PannelSpace
-        int LargeurEcran = 1920; 
-        int HauteurEcran = 880;  
+    	// Réglage grand écran : 1920x900 
+    	// Réglage grand écran : 1440x700 
+        int LargeurEcran = 1440; 
+        int HauteurEcran = 700;  
         int PannelSpace = 80; 
         
         // Paramètre par défault
@@ -398,44 +393,54 @@ public class SimulationNuageOiseaux {
         // Rappel : Cadrillage(int LargeurEcran, int HauteurEcran, int NombreColonnes, int NombreLignes)
         Cadrillage cadrillage = new Cadrillage(CaseLargeur, CaseHauteur, NombreColonnes, NombreLignes);
         // Ajouter l'affichage
-        frame.add(cadrillage);
+        //frame.add(cadrillage);
         
         // Créer un nuage d'oiseaux sur le cadrillage
-        NuageOiseaux nuageOiseaux = new NuageOiseaux(50, cadrillage); // Nombre d'oiseaux initial (à revoir)
-        //frame.add(nuageOiseaux);
+        // Rappel : NuageOiseaux(Cadrillage cadrillage)
+        NuageOiseaux nuageOiseaux = new NuageOiseaux(cadrillage); // Nombre d'oiseaux initial (à revoir)
+        frame.add(nuageOiseaux);
         
         
         // Ajout d'un bouton de pause
         JButton pauseButton = new JButton("Pause");
-        pauseButton.addActionListener(new ActionListener() {
+        pauseButton.addActionListener(new ActionListener() { 
+        	//Lorsque ce bouton est cliqué
             public void actionPerformed(ActionEvent e) {
                 isPaused = !isPaused;
-                //nuageOiseaux.setPause(isPaused);
+                nuageOiseaux.setPause(isPaused);
             }
         });
 
-        // Ajout d'un slider pour la vitesse
+        // Ajout d'un slider pour la valeur de la vitesse entre 1 et 10, avec une valeur initiale de 5
         JSlider speedSlider = new JSlider(JSlider.HORIZONTAL, 1, 10, 5);
+        // Définit l'espacement principal des graduations du curseur à 1
         speedSlider.setMajorTickSpacing(1);
+        // Active le dessin des graduations sur le curseur
         speedSlider.setPaintTicks(true);
         speedSlider.addChangeListener(new ChangeListener() {
+        	// Lorsque la valeur du curseur change
             public void stateChanged(ChangeEvent e) {
                 int Vitesse = speedSlider.getValue();
-                //nuageOiseaux.setSpeed(Vitesse);
+                nuageOiseaux.setSpeed(Vitesse);
             }
         });
 
         // Ajout d'un champ de texte pour entrer le nombre d'oiseaux
-        JTextField nbrOiseauxField = new JTextField(5);
-        nbrOiseauxField.setText("?"); // Valeur par défaut
+        // La taille du champ de texte est limitée à 3 caractères
+        JTextField nbrOiseauxField = new JTextField(3);
+        //Définit une valeur par défaut de 5 oiseaux
+        nbrOiseauxField.setText("5");  
 
         // Ajout d'un bouton pour appliquer le changement
         JButton applyButton = new JButton("Appliquer");
         applyButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                try {
+            	// Lorsque ce bouton est cliqué
+                try { 
+                	// On récupère le nombre d'oiseaux entré dans le champ de texte
                     int NombreOiseaux = Integer.parseInt(nbrOiseauxField.getText());
-                    //nuageOiseaux.setNbrOiseaux(NombreOiseaux); 
+                    nuageOiseaux.setNbrOiseaux(NombreOiseaux); 
+                // Si un nombre non valide est entré
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Veuillez entrer un nombre valide.", "Erreur", JOptionPane.ERROR_MESSAGE);
                 }
