@@ -134,34 +134,31 @@ class Oiseaux {
 class NueeOiseaux extends JPanel { 
 	private static final long serialVersionUID = 1L;
 	
+	// Valeur par défaut
     boolean isPaused = false;
-    int Vitesse = 3; // Vitesse des oiseaux par défaut
+    int Vitesse = 3; 
 	int NombreOiseaux;
+	int rayonRepulsion = 20; 
+	int rayonAlignement = 40; 
+	int rayonAttraction = 60; 
     
     ArrayList<Oiseaux> NueeOiseaux;
 	int Largeur;
-	int Hauteur;
-	double rayonRepulsion; 
-	double rayonAlignement; 
-	double rayonAttraction;    
+	int Hauteur;   
     
-    public NueeOiseaux(int Largeur, int Hauteur, double rayonRepulsion, double rayonAlignement, double rayonAttraction) {
+    public NueeOiseaux(int Largeur, int Hauteur) {
         this.NueeOiseaux = new ArrayList<>();  
     	
     	// Récupération des infos
     	this.Largeur = Largeur;
     	this.Hauteur = Hauteur;
-    	
-    	this.rayonRepulsion = rayonRepulsion;
-        this.rayonAlignement = rayonAlignement;
-        this.rayonAttraction = 	rayonAttraction;
         
         // Créer une minuterie pour mettre à jour la simulation toutes les 10 millisecondes
         Timer timer = new Timer(10, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (!isPaused) {
                     DeplacerOiseaux();
-                    Boid((double) rayonRepulsion, (double) rayonAlignement, (double) rayonAttraction);
+                    Boid(rayonRepulsion, rayonAlignement, rayonAttraction);
                     repaint(); // Redessiner la fenêtre
                 }
             }
@@ -208,7 +205,19 @@ class NueeOiseaux extends JPanel {
         }
     }
 	
-    public void Boid(double rayonRepulsion, double rayonAlignement, double rayonAttraction) {
+    public void setRepulsion(int rayonRepulsion) {
+        this.rayonRepulsion = rayonRepulsion;
+    }
+    
+    public void setAlignement(int rayonAlignement) {
+        this.rayonAlignement = rayonAlignement;
+    }
+    
+    public void setAttraction(int rayonAttraction) {
+        this.rayonAttraction = rayonAttraction;
+    }
+    
+    public void Boid(int rayonRepulsion, int rayonAlignement, int rayonAttraction) {
     	
 		for (Oiseaux oiseau1 : NueeOiseaux) {		
 			for (Oiseaux oiseau2 : NueeOiseaux) {
@@ -279,25 +288,51 @@ public class SimulationNueeOiseaux {
 
     public static void main(String[] args) {
     	// Réglage grand écran : 1920x900
-//    	int LargeurEcran = 1900; 
-//        int HauteurEcran = 900;  
+    	int LargeurEcran = 1800; 
+        int HauteurEcran = 980;  
     	// Réglage petit écran : 1440x700 
-        int LargeurEcran = 1440; 
-        int HauteurEcran = 700;  
-        int PannelSpace = 80; 
-        
-        double rayonRepulsion = 20; 
-    	double rayonAlignement = 40; 
-    	double rayonAttraction = 60; 
+//        int LargeurEcran = 1440; 
+//        int HauteurEcran = 700;  
+        int PannelSpace = 120; 
         
         // Paramètre par défault
         JFrame frame = new JFrame("Simulation Nuage d'Oiseaux");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(LargeurEcran, HauteurEcran+PannelSpace);
+        frame.setSize(LargeurEcran+PannelSpace, HauteurEcran);
         
         // Créer un nuage d'oiseaux sur le cadrillage
-        NueeOiseaux nueeOiseaux = new NueeOiseaux(LargeurEcran, HauteurEcran, rayonRepulsion, rayonAlignement, rayonAttraction); 
+        NueeOiseaux nueeOiseaux = new NueeOiseaux(LargeurEcran, HauteurEcran); 
         frame.add(nueeOiseaux);
+        
+        // Ajout un slider pour le rayons de répulsion entre 10 et 30, avec une valeur initiale de 20
+        JSlider repulsionSlider = new JSlider(JSlider.HORIZONTAL, 10, 30, 20);
+        repulsionSlider.addChangeListener(new ChangeListener() {
+        	// Lorsque la valeur du curseur change
+            public void stateChanged(ChangeEvent e) {
+                int rayonRepulsion = repulsionSlider.getValue();
+                nueeOiseaux.setRepulsion(rayonRepulsion);
+            }
+        });
+        
+        // Ajout un slider pour le rayon d'alignement entre 30 et 50, avec une valeur initiale de 50
+        JSlider alignementSlider = new JSlider(JSlider.HORIZONTAL, 30, 50, 40);
+        alignementSlider.addChangeListener(new ChangeListener() {
+        	// Lorsque la valeur du curseur change
+            public void stateChanged(ChangeEvent e) {
+                int rayonAlignement = alignementSlider.getValue();
+                nueeOiseaux.setAlignement(rayonAlignement);
+            }
+        });
+        
+        // Ajout un slider pour le rayon d'attraction entre 50 et 80, avec une valeur initiale de 60
+        JSlider attractionSlider = new JSlider(JSlider.HORIZONTAL, 50, 80, 60);
+        attractionSlider.addChangeListener(new ChangeListener() {
+        	// Lorsque la valeur du curseur change
+            public void stateChanged(ChangeEvent e) {
+                int rayonAttraction = attractionSlider.getValue();
+                nueeOiseaux.setAttraction(rayonAttraction);
+            }
+        });
         
         // Ajout d'un bouton de pause
         JButton pauseButton = new JButton("Pause");
@@ -311,10 +346,6 @@ public class SimulationNueeOiseaux {
 
         // Ajout d'un slider pour la valeur de la vitesse entre 1 et 10, avec une valeur initiale de 5
         JSlider speedSlider = new JSlider(JSlider.HORIZONTAL, 1, 10, 3);
-        // Définit l'espacement principal des graduations du curseur à 1
-        speedSlider.setMajorTickSpacing(1);
-        // Active le dessin des graduations sur le curseur
-        speedSlider.setPaintTicks(true);
         speedSlider.addChangeListener(new ChangeListener() {
         	// Lorsque la valeur du curseur change
             public void stateChanged(ChangeEvent e) {
@@ -326,8 +357,8 @@ public class SimulationNueeOiseaux {
         // Ajout d'un champ de texte pour entrer le nombre d'oiseaux
         // La taille du champ de texte est limitée à 5 (unité ?)
         JTextField nbrOiseauxField = new JTextField(5);
-        //Définit une valeur par défaut de 2 oiseaux
-        nbrOiseauxField.setText("2");  
+        //Définit une valeur par défaut de 5 oiseaux
+        nbrOiseauxField.setText("5");  
 
         // Ajout d'un bouton pour appliquer le changement
         JButton applyButton = new JButton("Appliquer");
@@ -349,16 +380,36 @@ public class SimulationNueeOiseaux {
             }
         });
 
-        // Création du panneau de contrôle
+        
+        // Création du panneau de contrôle avec un BoxLayout
         JPanel controlPanel = new JPanel();
-        controlPanel.add(pauseButton);
+        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+        
+        controlPanel.add(Box.createVerticalStrut(10)); // Espacement vertical
+        controlPanel.add(new JLabel("Rayon de répulsion:"));
+        controlPanel.add(repulsionSlider);
+        controlPanel.add(Box.createVerticalStrut(10)); 
+        controlPanel.add(new JLabel("Rayon d'alignement:"));
+        controlPanel.add(alignementSlider);
+        controlPanel.add(Box.createVerticalStrut(10));
+        controlPanel.add(new JLabel("Rayon d'attraction:"));
+        controlPanel.add(attractionSlider);
+        
+        controlPanel.add(Box.createVerticalStrut(30)); 
         controlPanel.add(new JLabel("Vitesse:"));
         controlPanel.add(speedSlider);
+        
+        controlPanel.add(Box.createVerticalStrut(20)); 
         controlPanel.add(new JLabel("Nombre d'oiseaux:"));
         controlPanel.add(nbrOiseauxField);
+        controlPanel.add(Box.createVerticalStrut(10)); 
         controlPanel.add(applyButton);
-
-        frame.add(controlPanel, BorderLayout.SOUTH);
+        
+        controlPanel.add(Box.createVerticalStrut(20)); 
+        controlPanel.add(pauseButton);
+        
+        frame.add(controlPanel, BorderLayout.EAST);
+         
         frame.setVisible(true);
     }
 }
