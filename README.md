@@ -1,6 +1,8 @@
 # Projet-1a-Simulation-d-oiseau-en-java
 
-Bonjour, bonjour
+Bonjour, 
 
-J'espère que je vous ait pas trop manquez, je vous ait mis une version de mon code 
-Je vais faire régulièrement des commit pour que vous voyez où j'en suis si ça vous intéresse
+J'ai mis une version de mon code et je vais faire régulièrement des commit pour que vous voyiez où j'en suis si ça vous intéresse.
+N'hésitez pas à faire de même avec vos programmes.
+
+Dernier commit (PA) : 26/03
