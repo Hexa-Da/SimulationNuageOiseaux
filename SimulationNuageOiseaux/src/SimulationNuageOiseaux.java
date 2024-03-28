@@ -374,11 +374,11 @@ public class SimulationNuageOiseaux {
 
     public static void main(String[] args) {
     	// Réglage grand écran : 1920x900
-    	int LargeurEcran = 1900; 
-        int HauteurEcran = 900;  
+//    	int LargeurEcran = 1900; 
+//        int HauteurEcran = 900;  
     	// Réglage petit écran : 1440x700 
-//        int LargeurEcran = 1440; 
-//        int HauteurEcran = 700;  
+        int LargeurEcran = 1440; 
+        int HauteurEcran = 700;  
         int PannelSpace = 80; 
         
         // Paramètre par défault
@@ -386,8 +386,8 @@ public class SimulationNuageOiseaux {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(LargeurEcran, HauteurEcran+PannelSpace);
         
-        int CaseLargeur = 20; 
-        int CaseHauteur = 20; 
+        int CaseLargeur = 60; 
+        int CaseHauteur = 60; 
         
         int NombreColonnes = LargeurEcran/CaseLargeur; 
         int NombreLignes = HauteurEcran/CaseHauteur; 
