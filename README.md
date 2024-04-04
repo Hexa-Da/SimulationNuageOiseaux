@@ -1,8 +1,8 @@
 # Projet-1a-Simulation-d-oiseau-en-java
 
-Bonjour, 
+Dernier commit (PA) : 04/04
 
-J'ai mis une version de mon code et je vais faire régulièrement des commit pour que vous voyiez où j'en suis si ça vous intéresse.
-N'hésitez pas à faire de même avec vos programmes.
+Pour ma part seul les 3 fonction qui constitue le boid ne fonctionne pas sinon je pense que tout est bon.
+En attente de vos retours...
 
-Dernier commit (PA) : 28/03
+La Bise
