@@ -122,39 +122,33 @@ class Grille extends JPanel {
 
 class Oiseaux {
 	
-    double x, y;
-    double vx, vy;
+    double x, y, z;
+    double vx, vy, vz;
     int NumCase; 
+    Color espece;
    
-    public Oiseaux(double x, double y, int NumCase) {
+    public Oiseaux(double x, double y, double z, int NumCase, Color espece) {
     	
         this.x = x;
         this.y = y;
+        this.z = z;
         this.NumCase = NumCase;
+        this.espece = espece;
        
         // Choix de la direction : (random.nextBoolean() ? 1 : -1)
         // Choix de la norm entre 0 et 1 inclus : random.nextInt(101)/100
         Random random = new Random();
         this.vx = (random.nextBoolean() ? 1 : -1) * (double) random.nextInt(101)/100;
         this.vy = (random.nextBoolean() ? 1 : -1) * (double) random.nextInt(101)/100;
+        this.vz = (random.nextBoolean() ? 1 : -1) * (double) random.nextInt(101)/100 * 0.002;
     }
     
-    public void Deplacer(int vitesse, int largeur, int hauteur) {
+    public void Deplacer(int vitesse, int largeur, int hauteur, int plafond) {
     	// Deplacer(double angleOiseau, int vitesse, int largeur, int hauteur)
     	
     	x += vx * vitesse;
         y += vy * vitesse;
-        
-     // mouvement avec variation
-//        Random random = new Random();
-//        double variation = (random.nextBoolean() ? 1 : -1) * random.nextDouble() * 10;
-//        angleOiseau += variation;
-//
-//        double newVx = Math.cos(Math.toRadians(angleOiseau));
-//        double newVy = Math.sin(Math.toRadians(angleOiseau));
-//
-//        vx = newVx;
-//        vy = newVy;
+        z += vz * vitesse;
         
      	  // Rebondir à l'intérieur de la fenêtre
         if (x < 0 || x >= largeur) {
@@ -163,20 +157,9 @@ class Oiseaux {
         if (y < 0 || y >= hauteur) {
         	vy = -vy;
         }
-        
-//        // Traverser la fenêtre
-//        if (x < 0) {
-//        	x = largeur;
-//        }
-//        if (y < 0) {
-//        	y = hauteur;
-//        }
-//        if (x > largeur) {
-//        	x = 0;
-//        }
-//        if (y > hauteur) {
-//        	y = 0;
-//        }
+        if (z <= 1 || z >= plafond) {
+        	vz = -vz;
+        }
     }
 
 	public void Repulsion(double Xo, double Yo, double dt, double CoeffRepulsion) { 
@@ -226,7 +209,7 @@ class Oiseaux {
         Graphics2D g2d = (Graphics2D) g;
 
         // Dessiner un curseur sous forme de flèche pour indiquer la direction de l'oiseau
-        double cursorLength = 10; // Longueur du curseur
+        double cursorLength = 10*z; // Longueur du curseur
         double cursorAngle = Math.atan2(vy, vx); // Angle de la direction de l'oiseau
 
         // Coordonnées des points de la flèche
@@ -237,7 +220,7 @@ class Oiseaux {
 
         // Dessiner la flèche
         Polygon arrow = new Polygon(xPoints, yPoints, 3);
-        g2d.setColor(Color.BLACK); // Couleur de la flèche (noir)
+        g2d.setColor(espece); // Couleur de la flèche (noir)
         g2d.fill(arrow);
         }
 }
@@ -257,17 +240,19 @@ class NueeOiseaux extends JPanel {
     
     ArrayList<Oiseaux> NueeOiseaux;
 	int Largeur;
-	int Hauteur;  
+	int Hauteur; 
+	int Plafond;
 	int TailleCase;
 	int NombreColonnes, NombreLignes;
 	ArrayList<Cases> grille;
     
-    public NueeOiseaux(int Largeur, int Hauteur, Grille grille) {
+    public NueeOiseaux(int Largeur, int Hauteur, int Plafond, Grille grille) {
         this.NueeOiseaux = new ArrayList<>();  
     	
     	// Récupération des infos
     	this.Largeur = Largeur;
     	this.Hauteur = Hauteur;
+    	this.Plafond = Plafond;
     	this.grille  = grille.Grille;
     	this.TailleCase = grille.TailleCase;
     	this.NombreColonnes = grille.NombreColonnes; 
@@ -302,12 +287,13 @@ class NueeOiseaux extends JPanel {
 //	        oiseau.Deplacer(angleOiseau,Vitesse,Largeur,Hauteur);
         	
         	
-	        oiseau.Deplacer(Vitesse,Largeur,Hauteur);
+	        oiseau.Deplacer(Vitesse,Largeur,Hauteur,Plafond);
 	        
 	        double x = oiseau.x;
 	        double y = oiseau.y;
 	        int NumCase = oiseau.NumCase;
 	        
+	        // si l'oiseau change de case on màj les population
 	        if (Coord_to_Num(x,y) != NumCase) {
 	        	oiseau.NumCase = Coord_to_Num(x,y);
 	        	for (Cases c : grille) {
@@ -315,7 +301,7 @@ class NueeOiseaux extends JPanel {
 	            		c.Population.add(oiseau);
 	            	}
 	        	}
-	            		
+	            // supprime l'oiseau de son ancienne case	
 	            for (Cases c : grille) {
 	            	if (c.NumCase == NumCase) {
 	            		c.Population.remove(oiseau);
@@ -348,10 +334,17 @@ class NueeOiseaux extends JPanel {
     	// on créé ou recréé une simulation
         NueeOiseaux.clear();
         for (int i = 0; i < NombreOiseaux; i++) {
+        	// Math.random() renvoie une valeur entre O et 1
             double x = Math.random() * Largeur;
             double y = Math.random() * Hauteur;
-            int NumCase = Coord_to_Num((double) x, (double) y);
-			Oiseaux oiseau = new Oiseaux((double) x, (double) y, (int) NumCase);
+            double z = Math.random() * (Plafond-1) + 1;
+            int NumCase = Coord_to_Num(x, y);
+            ArrayList<Color> ListeColor = new ArrayList<>();
+            ListeColor.add(Color.RED);
+            ListeColor.add(Color.BLUE);
+            ListeColor.add(Color.GREEN);
+            Color espece = ListeColor.get(new Random().nextInt(ListeColor.size()));
+			Oiseaux oiseau = new Oiseaux(x, y, z, NumCase, espece);
             NueeOiseaux.add(oiseau);
             
             // on initialise la population de chaque case
@@ -389,25 +382,33 @@ class NueeOiseaux extends JPanel {
 								
 								double x1 = oiseau1.x;
 								double y1 = oiseau1.y;
+								double z1 = oiseau1.z;
 								double x2 = oiseau2.x;
 								double y2 = oiseau2.y;
+								double z2 = oiseau2.z;
 								
+								double diffAltitude = Math.abs(z2-z1);
 								double distance = Math.sqrt(Math.pow((x1-x2),2) + Math.pow((y1-y2),2));
 								
 								double vx2 = oiseau2.vx;
 								double vy2 = oiseau2.vy;
 								double dt = 0.1;
 								
-								if (distance < TailleCase/3) {
-									oiseau1.Repulsion(x2,y2,dt,coeffRepulsion);
-								}
+								Color espece1 = oiseau1.espece;
+								Color espece2 = oiseau2.espece;
 								
-								else if (distance < 2*TailleCase/3) {
-									oiseau1.Alignement(vx2,vy2,coeffAlignement);
-								}
-								
-								else if (distance < TailleCase)  {
-									oiseau1.Attraction(x2,y2,dt,coeffAttraction);
+								if (diffAltitude < 1 && espece1 == espece2){
+									if (distance < TailleCase/3) {
+										oiseau1.Repulsion(x2,y2,dt,coeffRepulsion);
+									}
+									
+									else if (distance < 2*TailleCase/3) {
+										oiseau1.Alignement(vx2,vy2,coeffAlignement);
+									}
+									
+									else if (distance < TailleCase)  {
+										oiseau1.Attraction(x2,y2,dt,coeffAttraction);
+									}
 								}
 							}
 						}
@@ -439,17 +440,20 @@ public class SimulationNueeOiseaux {
     	// Paramètre de simulation
     	
     	// Réglage grand écran
-    	int LargeurEcran = 1730; 
-        int HauteurEcran = 940;
+//    	int LargeurEcran = 1730; 
+//        int HauteurEcran = 940;
     	// Réglage petit écran 
-//        int LargeurEcran = 1250; 
-//        int HauteurEcran = 750; 
+        int LargeurEcran = 1250; 
+        int HauteurEcran = 750; 
         
         // espace pour le pannel
         int PannelSpace = 180;
         
         // coté d'une case
         int TailleCase = 60; 
+        
+        // hauteur plafond
+        int Plafond = 3;
         
         
         
@@ -469,7 +473,7 @@ public class SimulationNueeOiseaux {
         frame.add(grille);
         
         // Créer un nuage d'oiseaux sur le cadrillage
-        NueeOiseaux nueeOiseaux = new NueeOiseaux(Largeur, Hauteur, grille); 
+        NueeOiseaux nueeOiseaux = new NueeOiseaux(Largeur, Hauteur, Plafond, grille); 
         frame.add(nueeOiseaux);
         
         
@@ -477,7 +481,7 @@ public class SimulationNueeOiseaux {
         // gestion du pannel de controle
       
         // Ajout un slider pour le rayons de répulsion entre 10 et 30, avec une valeur initiale de 20
-        JSlider repulsionSlider = new JSlider(JSlider.HORIZONTAL, 0, 5, 1);
+        JSlider repulsionSlider = new JSlider(JSlider.HORIZONTAL, 0, 50, 1);
         repulsionSlider.addChangeListener(new ChangeListener() {
         	// Lorsque la valeur du curseur change
             public void stateChanged(ChangeEvent e) {
@@ -487,7 +491,7 @@ public class SimulationNueeOiseaux {
         });
         
         // Ajout un slider pour le rayon d'alignement entre 30 et 50, avec une valeur initiale de 50
-        JSlider alignementSlider = new JSlider(JSlider.HORIZONTAL, 0, 5, 1);
+        JSlider alignementSlider = new JSlider(JSlider.HORIZONTAL, 0, 50, 1);
         alignementSlider.addChangeListener(new ChangeListener() {
         	// Lorsque la valeur du curseur change
             public void stateChanged(ChangeEvent e) {
@@ -497,7 +501,7 @@ public class SimulationNueeOiseaux {
         });
         
         // Ajout un slider pour le rayon d'attraction entre 50 et 80, avec une valeur initiale de 60
-        JSlider attractionSlider = new JSlider(JSlider.HORIZONTAL, 0, 5, 1);
+        JSlider attractionSlider = new JSlider(JSlider.HORIZONTAL, 0, 50, 1);
         attractionSlider.addChangeListener(new ChangeListener() {
         	// Lorsque la valeur du curseur change
             public void stateChanged(ChangeEvent e) {
