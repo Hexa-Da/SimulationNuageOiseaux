@@ -108,6 +108,8 @@ class Grille extends JPanel {
             }
 
             // A faire si les oiseau traversent les bords
+            // -> pas bon, les oiseaux sont bien considérés mais l'application des forces est mauvaise car elles dépendent de la distance entre les oiseaux
+            //    (ce qui est faussé car les oiseaux au delà des bords sont très loin à l'autre bout du cadrillage)
             else {
                 int VoisinNum = NumCase;
                 if (VoisinX < 0) {
