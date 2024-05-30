@@ -105,6 +105,28 @@ class Grille extends JPanel {
             	int VoisinNum = NumCase + deplacement[1] * NombreColonnes + deplacement[0]; 
                 Cases voisin = Grille.get(VoisinNum); 
                 Case.ajouterVoisin(voisin);
+
+            }
+            // A faire si les oiseau traversent les bords
+            else {
+                int VoisinNum = NumCase;
+                if (VoisinX < 0) {
+                    // Calcul de l'indice du voisin dans le cadrillage
+                    VoisinNum += NombreColonnes-1;
+                }
+                if (VoisinX >= NombreColonnes * TailleCase) {
+                    VoisinNum += - (NombreColonnes -1);
+                }
+                if (VoisinY < 0) {
+                    VoisinNum += NombreColonnes*(NombreLignes-1);
+                }
+                if (VoisinY >= NombreLignes*TailleCase) {
+                    VoisinNum -= NombreColonnes*(NombreLignes-1);
+                }
+
+                Cases voisin = Grille.get(VoisinNum); 
+                Case.ajouterVoisin(voisin);
+            
             }
         }
     }
@@ -134,7 +156,8 @@ class Oiseaux {
         this.z = z;
         this.NumCase = NumCase;
         this.espece = espece;
-       
+        // this.Matricule = Matricule;
+
         // Choix de la direction : (random.nextBoolean() ? 1 : -1)
         // Choix de la norm entre 0 et 1 inclus : random.nextInt(101)/100
         Random random = new Random();
@@ -146,64 +169,204 @@ class Oiseaux {
     public void Deplacer(int vitesse, int largeur, int hauteur, int plafond) {
     	// Deplacer(double angleOiseau, int vitesse, int largeur, int hauteur)
     	
-    	x += vx * vitesse;
-        y += vy * vitesse;
-        z += vz * vitesse;
+        this.x += this.vx * vitesse;
+        this.y += this.vy * vitesse;
+        this.z += this.vz * vitesse;
         
-     	  // Rebondir à l'intérieur de la fenêtre
-        if (x < 0 || x >= largeur) {
-        	vx = -vx;
+     	// Traverser la fenêtre
+        if (this.x < 0) {
+       	    this.x = largeur;
         }
-        if (y < 0 || y >= hauteur) {
-        	vy = -vy;
+        if (this.y < 0) {
+       	    this.y = hauteur;
         }
-        if (z <= 1 || z >= plafond) {
-        	vz = -vz;
+        if (this.x > largeur) {
+       	    this.x = 0;
+        }
+        if (this.y > hauteur) {
+       	    this.y = 0;
+        }
+        if (this.z <= 1 || this.z >= plafond) {
+        	this.vz = -this.vz;
         }
     }
 
-	public void Repulsion(double Xo, double Yo, double dt, double CoeffRepulsion) { 
-	
-		double dx = x-Xo;
-		double dy = y-Yo;
-		
-		double r = Math.sqrt(dx*dx+dy*dy); //Distance entre le Boid considéré et le Boid de coordonnées (Xo,Yo)
-		 
-		//Mise à jour de la vitesse
-		this.vx = this.vx+CoeffRepulsion*dt*dx/Math.pow(r,3); 
-		this.vy = this.vy+CoeffRepulsion*dt*dy/Math.pow(r,3); 
-		
-		this.x = this.x+dt*this.vx;
-		this.y = this.y+dt*this.vy; //Mise à jour de la position
+    public static double[] findMinimum(ArrayList<Double> numbers) {
+        // Vérifiez si la liste est vide ou null
+        if (numbers == null || numbers.isEmpty()) {
+            throw new IllegalArgumentException("La liste est vide ou null.");
+        }
+
+        // Initialisez le minimum avec le premier élément de la liste
+        double min = numbers.get(0);
+        int index = 0;
+        int indexmin = 0;
+        // Parcourez la liste pour trouver le minimum
+        for (double num : numbers) {
+            if (num < min) {
+                min = num; // Mettez à jour le minimum si un nombre plus petit est trouvé
+                indexmin = index;
+            }
+            index += 1;
+        }
+
+        double[] resultat = {min, indexmin};
+        return resultat;
+    }
+
+	public void Repulsion(ArrayList<Oiseaux> voisins, double CoeffRepulsion, double Vitesse_max, int Rayon, int  Largeur, int Hauteur) { 
+	    if (voisins.isEmpty()) {
+            return;
+        }
+        
+        int[][] deplacements = {{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},{0,0}};
+        double repelX = 0;
+        double repelY = 0;
+    
+        for (Oiseaux voisin : voisins) {
+            // Calculer la distance entre ce boid et le voisin
+            ArrayList<Double> Distances_possibles = new ArrayList<>();
+            for (int[] dep : deplacements){
+                double distance = Math.sqrt(Math.pow(voisin.x+dep[0]*Largeur - this.x, 2) + Math.pow(voisin.y+dep[1]*Largeur - this.y, 2));
+                Distances_possibles.add(distance);
+            }
+            double[] distmin = findMinimum(Distances_possibles);
+            double distance = distmin[0];
+            int indexmin = (int) distmin[1];
+
+            // Si le voisin est trop proche
+            if (distance < Rayon) {
+                // Calculer la direction pour s'éloigner du voisin
+                double directionX = this.x - (voisin.x+deplacements[indexmin][0]*Largeur);
+                double directionY = this.y - (voisin.y+deplacements[indexmin][1]*Largeur);
+
+                // Normaliser la direction
+                double norm = Math.sqrt(directionX * directionX + directionY * directionY);
+                if (norm > 0) {
+                    directionX /= norm;
+                    directionY /= norm;
+                }
+
+                // Ajouter à la force de répulsion
+                repelX += directionX;
+                repelY += directionY;
+            }
+        }
+    
+        // Appliquer la force de répulsion
+        this.vx += repelX * CoeffRepulsion;
+        this.vy += repelY * CoeffRepulsion;
 	}
 
-	public void Alignement(double Vox, double Voy, double coeffAlignement) {
-		
-	   double kal = coeffAlignement; //Coefficient d'alignement (kal < 1)
-	
-	   double N = Math.sqrt(this.vx*this.vx+this.vy*this.vy); //Norme de la vitesse du Boid considéré
-	   double No = Math.sqrt(Vox*Vox+Voy*Voy); //Norme de la vitesse du Boid de vitesse (Vxo,Vyo)
-	
-	   this.vx = N*(this.vx/N+kal*Vox/No)/Math.sqrt((this.vx/N+kal*Vox/No)*(this.vx/N+kal*Vox/No)+(this.vy/N+kal*Voy/No)*(this.vy/N+kal*Voy/No)); //Variation de vx
-	   this.vy = N*(this.vy/N+kal*Voy/No)/Math.sqrt((this.vx/N+kal*Vox/No)*(this.vx/N+kal*Vox/No)+(this.vy/N+kal*Voy/No)*(this.vy/N+kal*Voy/No)); //Variation de vy
-	   //Remarque: la norme de v est inchangée!
+	public void Alignement(ArrayList<Oiseaux> voisins, double coeffAlignement, double Vitesse_max, int RayonIn, int RayonOut, int  Largeur, int Hauteur) {
+            if (voisins.isEmpty()) {
+                return;
+            }
+            int[][] deplacements = {{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},{0,0}};
+            double avgVx = 0;
+            double avgVy = 0;
+            int count = 0;
+
+            for (Oiseaux voisin : voisins) {
+                // Calculer la distance entre ce boid et le voisin
+                ArrayList<Double> Distances_possibles = new ArrayList<>();
+                for (int[] dep : deplacements){
+                    double distance = Math.sqrt(Math.pow(voisin.x+dep[0]*Largeur - this.x, 2) + Math.pow(voisin.y+dep[1]*Largeur - this.y, 2));
+                    Distances_possibles.add(distance);
+                }
+                double[] distmin = findMinimum(Distances_possibles);
+                double distance = distmin[0];
+                // int indexmin = (int) distmin[1];
+
+
+                // Si le voisin est dans le 1er cercle
+                if (distance < RayonIn ){ //& distance >= RayonOut
+                    avgVx += voisin.vx;
+                    avgVy += voisin.vy;
+                    count++;
+                }
+            }
+
+            if (count > 0) {
+                // Calculer la moyenne des vitesses des voisins
+                avgVx /= count;
+                avgVy /= count;
+
+                // Normaliser la vitesse moyenne
+                double avgSpeed = Math.sqrt(avgVx * avgVx + avgVy * avgVy);
+                if (avgSpeed > 0) {
+                    avgVx = (avgVx / avgSpeed) * Vitesse_max;
+                    avgVy = (avgVy / avgSpeed) * Vitesse_max;
+                }
+
+                // Calculer la force d'alignement
+                double steerVx = avgVx - this.vx;
+                double steerVy = avgVy - this.vy;
+
+                // Appliquer la force d'alignement
+                this.vx += steerVx * coeffAlignement;
+                this.vy += steerVy * coeffAlignement;
+            }
+        
 	}
 
-	public void Attraction(double Xo, double Yo, double dt, double coeffAttraction) {
-	
-	   double kat = coeffAttraction; //Coefficient d'attraction
-	
-	   double dx = this.x-Xo;
-	   double dy = this.y-Yo;
-	
-	   double r = Math.sqrt(dx*dx+ dy*dy); //Distance entre les Boids
-	
-	   this.vx=this.vx+kat*dt*-dx/Math.pow(r,3);
-	   this.vy=this.vy+kat*dt*-dy/Math.pow(r,3); //Mise à jour de la vitesse
-	   
-	   this.x = this.x+dt*this.vx;
-	   this.y = this.y+dt*this.vy; //Mise à jour de la position
+	public void Attraction(ArrayList<Oiseaux> voisins, double coeffAttraction, double Vitesse_max, int RayonIn, int RayonOut, int  Largeur, int Hauteur) {
+        if (voisins.isEmpty()) {
+            return;
+        }
+        int[][] deplacements = {{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},{0,0}};
+        double avgX = 0;
+        double avgY = 0;
+        int count = 0;
+    
+        for (Oiseaux voisin : voisins) {
+            ArrayList<Double> Distances_possibles = new ArrayList<>();
+            for (int[] dep : deplacements){
+                double distance = Math.sqrt(Math.pow(voisin.x+dep[0]*Largeur - this.x, 2) + Math.pow(voisin.y+dep[1]*Largeur - this.y, 2));
+                Distances_possibles.add(distance);
+            }
+            double[] distmin = findMinimum(Distances_possibles);
+            double Distance = distmin[0];
+            int indexmin = (int) distmin[1];
+
+            if (Distance < RayonIn ){ //& Distance >= RayonOut
+                avgX += (voisin.x+deplacements[indexmin][0]*Largeur);
+                avgY += (voisin.y+deplacements[indexmin][1]*Largeur);
+                count++;
+            }
+        }
+    
+        if (count > 0) {
+            avgX /= count;
+            avgY /= count;
+    
+            // Calculer la direction vers le centre de masse des voisins
+            double directionX = avgX - this.x;
+            double directionY = avgY - this.y;
+    
+            // Normaliser la direction
+            double distance = Math.sqrt(directionX * directionX + directionY * directionY);
+            if (distance > 0) {
+                directionX = (directionX / distance) * Vitesse_max;
+                directionY = (directionY / distance) * Vitesse_max;
+            }
+    
+            // Calculer la force d'attraction
+            double steerX = directionX - this.vx;
+            double steerY = directionY - this.vy;
+    
+            // Appliquer la force d'attraction
+            this.vx += steerX * coeffAttraction;
+            this.vy += steerY * coeffAttraction;
+        }
 	}
+        
+    public void NormerVitesse(double Vitesse){
+        //règle la vitesse de l'oiseau à Vitesse, pour que tous les oiseaux aient la même vitesse.
+        double Norme = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+        this.vx = this.vx/Norme * Vitesse;
+        this.vy = this.vy/Norme * Vitesse;
+    }
         
     public void dessiner(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
@@ -234,9 +397,13 @@ class NueeOiseaux extends JPanel {
     boolean isPaused = false;
     int Vitesse = 3; 
 	int NombreOiseaux;
-	double coeffRepulsion = 1; 
-	double coeffAlignement = 1/8; 
-	double coeffAttraction = 1; 
+	double coeffRepulsion = 0.05; 
+	double coeffAlignement = 0.1; 
+	double coeffAttraction = 0.05; 
+	double Vitmax=3;
+    int RayonAt = 100;
+    int RayonAl = 66;
+    int RayonRe = 33; 
     
     ArrayList<Oiseaux> NueeOiseaux;
 	int Largeur;
@@ -274,20 +441,8 @@ class NueeOiseaux extends JPanel {
     
     public void DeplacerOiseaux() {
         for (Oiseaux oiseau : NueeOiseaux) {
-            
-        	// mouvement avec variation
-//            double vx = oiseau.vx;
-//			double vy = oiseau.vy;
-//            double moduleOiseau = Math.sqrt(vx * vx + vy * vy);
-//	        double angleOiseau = Math.toDegrees(Math.acos(vx / moduleOiseau));
-//	        if (vy < 0) {
-//	            angleOiseau = 360 - angleOiseau;
-//	        }
-//	        
-//	        oiseau.Deplacer(angleOiseau,Vitesse,Largeur,Hauteur);
         	
-        	
-	        oiseau.Deplacer(Vitesse,Largeur,Hauteur,Plafond);
+	        oiseau.Deplacer(this.Vitesse,this.Largeur,this.Hauteur,this.Plafond);
 	        
 	        double x = oiseau.x;
 	        double y = oiseau.y;
@@ -324,10 +479,26 @@ class NueeOiseaux extends JPanel {
     public void setSpeed(int Vitesse) {
         this.Vitesse = Vitesse;
     }
+
+    public void setRayonAt(int R) {
+        this.RayonAt = R;
+    }
+
+    public void setRayonAl(int R) {
+        this.RayonAl = R;
+    }
+
+    public void setRayonRe(int R) {
+        this.RayonRe = R;
+    }
          
     public void setNbrOiseaux(int NombreOiseaux) {
         this.NombreOiseaux = NombreOiseaux;
         updateOiseaux();
+    }
+
+    public void setVitmax(double Vitmax) {
+    	this.Vitmax = Vitmax;
     }
      
     public void updateOiseaux() {
@@ -356,15 +527,15 @@ class NueeOiseaux extends JPanel {
         }
     }
     
-    public void setRepulsion(int coeffRepulsion) {
+    public void setRepulsion(double coeffRepulsion) {
         this.coeffRepulsion = coeffRepulsion;
     }
     
-    public void setAlignement(int coeffAlignement) {
-        this.coeffAlignement = coeffAlignement/8;
+    public void setAlignement(double coeffAlignement) {
+        this.coeffAlignement = coeffAlignement;
     }
     
-    public void setAttraction(int coeffAttraction) {
+    public void setAttraction(double coeffAttraction) {
         this.coeffAttraction = coeffAttraction;
     }
     
@@ -375,44 +546,14 @@ class NueeOiseaux extends JPanel {
 				if (c.NumCase == oiseau1.NumCase) {
 					ArrayList<Oiseaux> Voisin = new ArrayList<>(c.Population);
 					for (Cases voisin : c.CaseVoisine) {
-						Voisin.addAll(voisin.Population);
-					
-						for (Oiseaux oiseau2 : Voisin) {						
-							if (oiseau1 != oiseau2) {
-								
-								double x1 = oiseau1.x;
-								double y1 = oiseau1.y;
-								double z1 = oiseau1.z;
-								double x2 = oiseau2.x;
-								double y2 = oiseau2.y;
-								double z2 = oiseau2.z;
-								
-								double diffAltitude = Math.abs(z2-z1);
-								double distance = Math.sqrt(Math.pow((x1-x2),2) + Math.pow((y1-y2),2));
-								
-								double vx2 = oiseau2.vx;
-								double vy2 = oiseau2.vy;
-								double dt = 0.1;
-								
-								Color espece1 = oiseau1.espece;
-								Color espece2 = oiseau2.espece;
-								
-								if (diffAltitude < 1 && espece1 == espece2){
-									if (distance < TailleCase/3) {
-										oiseau1.Repulsion(x2,y2,dt,coeffRepulsion);
-									}
-									
-									else if (distance < 2*TailleCase/3) {
-										oiseau1.Alignement(vx2,vy2,coeffAlignement);
-									}
-									
-									else if (distance < TailleCase)  {
-										oiseau1.Attraction(x2,y2,dt,coeffAttraction);
-									}
-								}
-							}
-						}
+						Voisin.addAll(voisin.Population);	
 					}
+
+                    oiseau1.Repulsion(Voisin,coeffRepulsion,Vitmax,RayonRe, Largeur, Hauteur);
+                    oiseau1.Alignement(Voisin,coeffAlignement,Vitmax,RayonAl,RayonRe, Largeur, Hauteur);
+                    oiseau1.Attraction(Voisin,coeffAttraction,Vitmax,RayonAt,RayonAl, Largeur, Hauteur);
+                    oiseau1.NormerVitesse(Vitmax);	
+					
 				}
 			}
 	    }
@@ -481,32 +622,42 @@ public class SimulationNueeOiseaux {
         // gestion du pannel de controle
       
         // Ajout un slider pour le rayons de répulsion entre 10 et 30, avec une valeur initiale de 20
-        JSlider repulsionSlider = new JSlider(JSlider.HORIZONTAL, 0, 50, 1);
+        JSlider repulsionSlider = new JSlider(JSlider.HORIZONTAL, 0, 20, 5);
         repulsionSlider.addChangeListener(new ChangeListener() {
         	// Lorsque la valeur du curseur change
             public void stateChanged(ChangeEvent e) {
-                int coeffRepulsion = repulsionSlider.getValue();
+                double coeffRepulsion = repulsionSlider.getValue() * 0.01;
                 nueeOiseaux.setRepulsion(coeffRepulsion);
             }
         });
         
         // Ajout un slider pour le rayon d'alignement entre 30 et 50, avec une valeur initiale de 50
-        JSlider alignementSlider = new JSlider(JSlider.HORIZONTAL, 0, 50, 1);
+        JSlider alignementSlider = new JSlider(JSlider.HORIZONTAL, 0, 20, 10);
         alignementSlider.addChangeListener(new ChangeListener() {
         	// Lorsque la valeur du curseur change
             public void stateChanged(ChangeEvent e) {
-                int coeffAlignement = alignementSlider.getValue();
+                double coeffAlignement = alignementSlider.getValue() * 0.01;
                 nueeOiseaux.setAlignement(coeffAlignement);
             }
         });
         
         // Ajout un slider pour le rayon d'attraction entre 50 et 80, avec une valeur initiale de 60
-        JSlider attractionSlider = new JSlider(JSlider.HORIZONTAL, 0, 50, 1);
+        JSlider attractionSlider = new JSlider(JSlider.HORIZONTAL, 0, 20, 5);
         attractionSlider.addChangeListener(new ChangeListener() {
         	// Lorsque la valeur du curseur change
             public void stateChanged(ChangeEvent e) {
-                int coeffAttraction = attractionSlider.getValue();
+                double coeffAttraction = attractionSlider.getValue() * 0.01;
                 nueeOiseaux.setAttraction(coeffAttraction);
+            }
+        });
+
+        // Slider pour la vitesse maximale
+        JSlider vitmaxSlider = new JSlider(JSlider.HORIZONTAL, 0, 6, 3);
+        vitmaxSlider.addChangeListener(new ChangeListener() {
+        	// Lorsque la valeur du curseur change
+            public void stateChanged(ChangeEvent e) {
+                double Vitmax = vitmaxSlider.getValue();
+                nueeOiseaux.setVitmax(Vitmax);
             }
         });
         
@@ -527,6 +678,36 @@ public class SimulationNueeOiseaux {
             public void stateChanged(ChangeEvent e) {
                 int Vitesse = speedSlider.getValue();
                 nueeOiseaux.setSpeed(Vitesse);
+            }
+        });
+
+        // slider rayon d'attraction
+        JSlider RayonAtSlider = new JSlider(JSlider.HORIZONTAL, 1, TailleCase, 100);
+        RayonAtSlider.addChangeListener(new ChangeListener() {
+        	// Lorsque la valeur du curseur change
+            public void stateChanged(ChangeEvent e) {
+                int R = RayonAtSlider.getValue();
+                nueeOiseaux.setRayonAt(R);
+            }
+        });
+
+        // slider rayon d'alignement
+        JSlider RayonAlSlider = new JSlider(JSlider.HORIZONTAL, 1, TailleCase, 66);
+        RayonAlSlider.addChangeListener(new ChangeListener() {
+        	// Lorsque la valeur du curseur change
+            public void stateChanged(ChangeEvent e) {
+                int R = RayonAlSlider.getValue();
+                nueeOiseaux.setRayonAl(R);
+            }
+        });
+
+        // slider rayon de répulsion
+        JSlider RayonReSlider = new JSlider(JSlider.HORIZONTAL, 1, TailleCase, 33);
+        RayonReSlider.addChangeListener(new ChangeListener() {
+        	// Lorsque la valeur du curseur change
+            public void stateChanged(ChangeEvent e) {
+                int R = RayonReSlider.getValue();
+                nueeOiseaux.setRayonRe(R);
             }
         });
 
@@ -573,6 +754,15 @@ public class SimulationNueeOiseaux {
         controlPanel.add(Box.createVerticalStrut(10));
         controlPanel.add(new JLabel("Coeff d'attraction:"));
         controlPanel.add(attractionSlider);
+        controlPanel.add(Box.createVerticalStrut(10));
+        controlPanel.add(new JLabel("Vitesse maximale:"));
+        controlPanel.add(vitmaxSlider);
+        controlPanel.add(new JLabel("Rayon d'attraction:"));
+        controlPanel.add(RayonAtSlider);
+        controlPanel.add(new JLabel("Rayon d'alignement:"));
+        controlPanel.add(RayonAlSlider);
+        controlPanel.add(new JLabel("Rayon de répulsion:"));
+        controlPanel.add(RayonReSlider);
         
         controlPanel.add(Box.createVerticalStrut(30)); 
         controlPanel.add(new JLabel("Vitesse:"));
