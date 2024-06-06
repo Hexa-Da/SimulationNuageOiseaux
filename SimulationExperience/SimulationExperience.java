@@ -349,7 +349,7 @@ public class SimulationExperience extends JPanel implements ActionListener {
 
         // Paramètres par défaut
         JFrame frame = new JFrame("Simulation Nuée d'Oiseaux");
-        frame.setResizable(false);
+        // frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(largeur + panelspace + 100, hauteur + 100);
 
