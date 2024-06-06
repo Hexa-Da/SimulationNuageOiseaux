@@ -852,7 +852,6 @@ public class SimulationNueeOiseaux {
     
         // Création de la Carte
         Carte carte = new Carte(LargeurEcran,LargeurEcran);
-        // frame.add(carte);
         
         // Créer un nuage d'oiseaux sur le cadrillage
         NueeOiseaux nueeOiseaux = new NueeOiseaux(Largeur, Hauteur, Plafond, grille, carte); 
