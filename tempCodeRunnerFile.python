@@ -1,0 +1,6 @@
+n=2
+a,b=" /)ii/)\n(o '')","___|\n   | ___ |\n   ||   ||"
+if n>0: 
+    print(a+n*"\n   | |"+b)
+else:
+    print(a+b)

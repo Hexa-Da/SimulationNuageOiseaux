@@ -6,7 +6,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.event.KeyEvent;
 
-
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.HashMap;
@@ -61,7 +60,6 @@ class Grille extends JPanel {
         this.NombreColonnes = NombreColonnes;
         this.TailleCase = TailleCase;
 
-                
         // Création des cases du cadrillage
         for (int i = 0; i < NombreLignes; i++) {
             for (int j = 0; j < NombreColonnes; j++) {
@@ -71,8 +69,6 @@ class Grille extends JPanel {
                 int X = j * TailleCase;
                 int Y = i * TailleCase;
                 
-                
-
                 Cases nouvelleCase = new Cases(NumCase, X, Y, TailleCase);
                 Grille.add(nouvelleCase);
             }
@@ -507,11 +503,10 @@ class Oiseaux {
                 double steerVx = avgVx - this.vx;
                 double steerVy = avgVy - this.vy;
 
-                // Appliquer la force d'alignement
-                this.vx += steerVx * coeffAlignement;
-                this.vy += steerVy * coeffAlignement;
-            }
-        
+            // Appliquer la force d'alignement
+            this.vx += steerVx * coeffAlignement;
+            this.vy += steerVy * coeffAlignement;
+        }
 	}
 
 	public void Attraction(ArrayList<Oiseaux> voisins, double coeffAttraction, double Vitesse_max, int RayonIn, int RayonOut, int  Largeur, int Hauteur) {
@@ -651,7 +646,6 @@ class NueeOiseaux extends JPanel {
                 }
             }
         });
-
         timer.start();
     }
     
@@ -804,7 +798,6 @@ class NueeOiseaux extends JPanel {
         }    
     }
 }
-
 
 
 
@@ -1045,7 +1038,3 @@ public class SimulationNueeOiseaux {
         frame.setVisible(true);
     }
 }
-
-
-
-
