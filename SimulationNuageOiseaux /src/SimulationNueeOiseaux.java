@@ -457,51 +457,51 @@ class Oiseaux {
 	}
 
 	public void Alignement(ArrayList<Oiseaux> voisins, double coeffAlignement, double Vitesse_max, int RayonIn, int RayonOut, int  Largeur, int Hauteur) {
-            if (voisins.isEmpty()) {
-                return;
-            }
-            int[][] deplacements = {{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},{0,0}};
-            double avgVx = 0;
-            double avgVy = 0;
-            int count = 0;
+        if (voisins.isEmpty()) {
+            return;
+        }
+        int[][] deplacements = {{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},{0,0}};
+        double avgVx = 0;
+        double avgVy = 0;
+        int count = 0;
 
-            for (Oiseaux voisin : voisins) {
-                if (this.espece == voisin.espece){
-                    // Calculer la distance entre ce boid et le voisin
-                    ArrayList<Double> Distances_possibles = new ArrayList<>();
-                    for (int[] dep : deplacements){
-                        double distance = Math.sqrt(Math.pow(voisin.x+dep[0]*Largeur - this.x, 2) + Math.pow(voisin.y+dep[1]*Largeur - this.y, 2));
-                        Distances_possibles.add(distance);
-                    }
-                    double[] distmin = findMinimum(Distances_possibles);
-                    double distance = distmin[0];
-                    // int indexmin = (int) distmin[1];
+        for (Oiseaux voisin : voisins) {
+            if (this.espece == voisin.espece){
+                // Calculer la distance entre ce boid et le voisin
+                ArrayList<Double> Distances_possibles = new ArrayList<>();
+                for (int[] dep : deplacements){
+                    double distance = Math.sqrt(Math.pow(voisin.x+dep[0]*Largeur - this.x, 2) + Math.pow(voisin.y+dep[1]*Largeur - this.y, 2));
+                    Distances_possibles.add(distance);
+                }
+                double[] distmin = findMinimum(Distances_possibles);
+                double distance = distmin[0];
+                // int indexmin = (int) distmin[1];
 
 
-                    // Si le voisin est dans le 1er cercle
-                    if (distance < RayonIn ){ //& distance >= RayonOut
-                        avgVx += voisin.vx;
-                        avgVy += voisin.vy;
-                        count++;
-                    }
+                // Si le voisin est dans le 1er cercle
+                if (distance < RayonIn ){ //& distance >= RayonOut
+                    avgVx += voisin.vx;
+                    avgVy += voisin.vy;
+                    count++;
                 }
             }
+        }
 
-            if (count > 0) {
-                // Calculer la moyenne des vitesses des voisins
-                avgVx /= count;
-                avgVy /= count;
+        if (count > 0) {
+            // Calculer la moyenne des vitesses des voisins
+            avgVx /= count;
+            avgVy /= count;
 
-                // Normaliser la vitesse moyenne
-                double avgSpeed = Math.sqrt(avgVx * avgVx + avgVy * avgVy);
-                if (avgSpeed > 0) {
-                    avgVx = (avgVx / avgSpeed) * Vitesse_max;
-                    avgVy = (avgVy / avgSpeed) * Vitesse_max;
-                }
+            // Normaliser la vitesse moyenne
+            double avgSpeed = Math.sqrt(avgVx * avgVx + avgVy * avgVy);
+            if (avgSpeed > 0) {
+                avgVx = (avgVx / avgSpeed) * Vitesse_max;
+                avgVy = (avgVy / avgSpeed) * Vitesse_max;
+            }
 
-                // Calculer la force d'alignement
-                double steerVx = avgVx - this.vx;
-                double steerVy = avgVy - this.vy;
+            // Calculer la force d'alignement
+            double steerVx = avgVx - this.vx;
+            double steerVy = avgVy - this.vy;
 
             // Appliquer la force d'alignement
             this.vx += steerVx * coeffAlignement;
