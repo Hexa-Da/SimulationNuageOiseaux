@@ -791,7 +791,7 @@ class NueeOiseaux extends JPanel {
                     oiseau1.Alignement(Voisin,coeffAlignement,Vitmax,RayonAl,RayonRe, Largeur, Hauteur);
                     oiseau1.Attraction(Voisin,coeffAttraction,Vitmax,RayonAt,RayonAl, Largeur, Hauteur);
                     oiseau1.NormerVitesse(Vitmax);
-                    oiseau1.Repulsion(ListObstacle,2*0.01,Vitmax,RayonRe,Largeur,Hauteur);	
+                    oiseau1.Repulsion(ListObstacle,0.7,Vitmax,RayonRe,Largeur,Hauteur);	
 					
 				}
 			}
