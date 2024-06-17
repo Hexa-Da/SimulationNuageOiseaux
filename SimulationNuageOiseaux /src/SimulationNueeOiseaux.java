@@ -175,7 +175,7 @@ class Carte extends JPanel {
         Vecti gridSize = new Vecti(largeur,hauteur);
 		Vecti size = new Vecti(3,3); //On divise notre carte en une grille de 3 par 3
         long seed = (long) aleatoire(2<<10,2<<99); //Génère une seed aléatoire
-        colors = mapGeneration(seed,gridSize,size);
+        colors = mapGeneration(seed,largeur,size);
     }
 
     public static double perlin(double x,double y, int[] permutation){
@@ -230,20 +230,20 @@ class Carte extends JPanel {
 		return ((6*t - 15)*t + 10)*t*t*t;
 	}
 
-    public static Color[][] mapGeneration(long seed,Vecti gridSize,Vecti size){
+    public static Color[][] mapGeneration(long seed,int largeur,Vecti size){
 		Random rand = new Random(seed);
 		int[] permutation = new int[512];
 		for (int i = 0; i < 256; i ++) {
 			permutation[i] = rand.nextInt(256);
 			permutation[i+56] = permutation[i];
 		}		
-		Color[][] colors = new Color[gridSize.x][gridSize.y];
+		Color[][] colors = new Color[largeur][largeur];
 		
-		for (int i = 0; i < gridSize.x; i++) {
-			for (int j = 0; j < gridSize.y; j++) {
+		for (int i = 0; i < largeur; i++) {
+			for (int j = 0; j < largeur; j++) {
 				
-				double x = ((double)i/(double)gridSize.x);
-				double y = ((double)j/(double)gridSize.y);
+				double x = ((double)i/(double)largeur);
+				double y = ((double)j/(double)largeur);
 				double n = perlin(size.x*x,size.y*y,permutation);
 				
 				//Eau
@@ -282,6 +282,7 @@ class Carte extends JPanel {
 		        	colors[i][j] = Color.decode("#737373");
 		        }else if (n>=0.71 && n < 0.74){
 		        	colors[i][j] = Color.decode("#666666");
+                // System.out.println(i);
 		        //Neige
 		        }else {
 		        	colors[i][j] = Color.WHITE;
@@ -290,6 +291,13 @@ class Carte extends JPanel {
 		}
         return colors;
 	}
+
+    public boolean isMountainOrSnow(double x, double y){
+        Color terrainColor = colors[(int)y][(int)x];
+
+        return terrainColor.equals(Color.WHITE) || terrainColor.equals(Color.decode("#808080")) || 
+                terrainColor.equals(Color.decode("#666666")) || terrainColor.equals(Color.decode("#737373"));
+    }
 
     public static double aleatoire (double min, double max){
         return min + Math.random()*(max-min);
@@ -340,15 +348,16 @@ class Oiseaux {
     double vx, vy, vz;
     int NumCase; 
     Color espece;
+    Carte carte;
    
-    public Oiseaux(double x, double y, double z, int NumCase, Color espece) {
+    public Oiseaux(double x, double y, double z, int NumCase, Color espece, Carte carte) {
     	
         this.x = x;
         this.y = y;
         this.z = z;
         this.NumCase = NumCase;
         this.espece = espece;
-        // this.Matricule = Matricule;
+        this.carte = carte;
 
         // Choix de la direction : (random.nextBoolean() ? 1 : -1)
         // Choix de la norm entre 0 et 1 inclus : random.nextInt(101)/100
@@ -359,29 +368,80 @@ class Oiseaux {
     }
     
     public void Deplacer(int vitesse, int largeur, int hauteur, int plafond) {
-    	// Deplacer(double angleOiseau, int vitesse, int largeur, int hauteur)
-    	
-        this.x += this.vx * vitesse;
-        this.y += this.vy * vitesse;
-        this.z += this.vz * vitesse;
+
+        double newX = this.x + this.vx * vitesse;
+        double newY = this.y + this.vy * vitesse;
         
-     	// Traverser la fenêtre
-        if (this.x < 0) {
-       	    this.x = largeur;
+        // Vérifier les limites de la carte
+        if (newX < 0) newX = largeur - 1;
+        if (newY < 0) newY = hauteur - 1;
+        if (newX >= largeur) newX = 0;
+        if (newY >= hauteur) newY = 0;
+
+        // Éviter les montagnes et la neige
+        if (!carte.isMountainOrSnow(newX, newY) || this.z >= 2) {
+            this.x = newX;
+            this.y = newY;
         }
-        if (this.y < 0) {
-       	    this.y = hauteur;
+
+        else if (carte.isMountainOrSnow(newX, newY) && this.z < 2) {
+            // Si la nouvelle position est une montagne ou de la neige, changez de direction
+            Random random = new Random();
+            double angle = Math.toRadians(random.nextBoolean() ? 30 : -30); // Randomly choose ±10 degrees
+            double cosTheta = Math.cos(angle);
+            double sinTheta = Math.sin(angle);
+            double newVx = vx * cosTheta - vy * sinTheta;
+            double newVy = vx * sinTheta + vy * cosTheta;
+            this.vx = newVx;
+            this.vy = newVy;
         }
-        if (this.x > largeur) {
-       	    this.x = 0;
-        }
-        if (this.y > hauteur) {
-       	    this.y = 0;
-        }
+
+        this.z += this.vz * vitesse;
+
         if (this.z <= 1 || this.z >= plafond) {
-        	this.vz = -this.vz;
+            this.vz = -this.vz;
         }
     }
+
+    // public void RepulsionMontagne(Colors[][] colors, double CoeffRepulsion, double Vitesse_max, int Rayon, int  Largeur, int Hauteur) { 
+	//     if (voisins.isEmpty()) {
+    //         return;
+    //     }
+        
+    //     int[][] deplacements = {{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},{0,0}};
+    //     double repelX = 0;
+    //     double repelY = 0;
+    
+    //     for (Oiseaux voisin : voisins) {
+    //         // Calculer la distance entre ce boid et le voisin
+    //         ArrayList<Double> Distances_possibles = new ArrayList<>();
+    //         for (int[] dep : deplacements){
+    //             double distance = Math.sqrt(Math.pow(voisin.x+dep[0]*Largeur - this.x, 2) + Math.pow(voisin.y+dep[1]*Largeur - this.y, 2));
+    //             Distances_possibles.add(distance);
+    //         }
+    //         double[] distmin = findMinimum(Distances_possibles);
+    //         double distance = distmin[0];
+    //         int indexmin = (int) distmin[1];
+
+    //         // Si le voisin est trop proche
+    //         if (distance < Rayon) {
+    //             // Calculer la direction pour s'éloigner du voisin
+    //             double directionX = this.x - (voisin.x+deplacements[indexmin][0]*Largeur);
+    //             double directionY = this.y - (voisin.y+deplacements[indexmin][1]*Largeur);
+
+    //             // Normaliser la direction
+    //             double norm = Math.sqrt(directionX * directionX + directionY * directionY);
+    //             if (norm > 0) {
+    //                 directionX /= norm;
+    //                 directionY /= norm;
+    //             }
+                
+    //             // Ajouter à la force de répulsion
+    //             repelX += directionX;
+    //             repelY += directionY;
+    //         }   
+    //     }
+    // }
 
     public static double[] findMinimum(ArrayList<Double> numbers) {
         // Vérifiez si la liste est vide ou null
@@ -426,6 +486,10 @@ class Oiseaux {
             double distance = distmin[0];
             int indexmin = (int) distmin[1];
 
+            if (this.espece == Color.MAGENTA && voisin.espece == Color.BLACK){
+                    Rayon = 2*Rayon;
+                }
+
             // Si le voisin est trop proche
             if (distance < Rayon) {
                 // Calculer la direction pour s'éloigner du voisin
@@ -442,13 +506,7 @@ class Oiseaux {
                 // Ajouter à la force de répulsion
                 repelX += directionX;
                 repelY += directionY;
-
-                if (this.espece != voisin.espece){
-                    repelX *= 3/2;
-                    repelY *= 3/2;
-                }
-            }
-            
+            }   
         }
 
         // Appliquer la force de répulsion
@@ -640,6 +698,7 @@ class NueeOiseaux extends JPanel {
         Timer timer = new Timer(10, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (!isPaused) {
+                    // isMountainOrSnow();
                     DeplacerOiseaux();
                     Boid();
                     repaint(); // Redessiner la fenêtre
@@ -702,16 +761,16 @@ class NueeOiseaux extends JPanel {
         this.RayonRe = R;
     }
          
-    public void setNbrOiseaux(int NombreOiseaux) {
+    public void setNbrOiseaux(int NombreOiseaux, int Espece1, int Espece2) {
         this.NombreOiseaux = NombreOiseaux;
-        updateOiseaux();
+        updateOiseaux(Espece1,Espece2);
     }
 
     public void setVitmax(double Vitmax) {
     	this.Vitmax = Vitmax;
     }
      
-    public void updateOiseaux() {
+    public void updateOiseaux(int Espece1, int Espece2) {
     	// on créé ou recréé une simulation
         NueeOiseaux.clear();
         for (int i = 0; i < NombreOiseaux; i++) {
@@ -720,26 +779,42 @@ class NueeOiseaux extends JPanel {
             double y = Math.random() * Hauteur;
             double z = Math.random() * (Plafond-1) + 1;
             int NumCase = Coord_to_Num(x, y);
-            Color espece = Repartition();
-			Oiseaux oiseau = new Oiseaux(x, y, z, NumCase,espece);
-            NueeOiseaux.add(oiseau);
+            Color espece = Repartition(Espece1,Espece2);
+            if (!carte.isMountainOrSnow(x, y)){
+                Oiseaux oiseau = new Oiseaux(x, y, z, NumCase,espece,carte);
+                NueeOiseaux.add(oiseau);
             
-            // on initialise la population de chaque case
-            for (Cases c : grille) {
-            	if (c.NumCase == NumCase) {
-            		c.Population.add(oiseau);
-            	}
+                // on initialise la population de chaque case
+                for (Cases c : grille) {
+                    if (c.NumCase == NumCase) {
+                        c.Population.add(oiseau);
+                    }
+                }
             }
         }
     }
 
-    public Color Repartition() {
+    // public static ArrayList<Oiseau> isMountainOrSnow() {
+    
+    //     ArrayList Indice = new ArrayList<Oiseau>();
+    //     for (x=0; x=largeur; x++){
+    //         for (y=0; y=hauteur; y++){
+    //             Color terrainColor = colors[(int)y][(int)x];
+    //             if (terrainColor.equals(Color.WHITE) || terrainColor.equals(Color.decode("#808080")) || 
+    //             terrainColor.equals(Color.decode("#666666")) || terrainColor.equals(Color.decode("#737373"))){
+    //              Oiseaux Montagne = new Oiseaux(x, y, 0, NumCase,Color.RED,carte);
+    //                 Indice.add(Montagne);
+    //             }
+    //         }
+    //     }
+    //     return Indice;
+    // }
+
+    public Color Repartition(int Espece1, int Espece2) {
         // Définir les couleurs et leurs poids correspondants
         HashMap<Color, Integer> couleursEtPoids = new HashMap<>();
-        couleursEtPoids.put(Color.RED, 0);    
-        couleursEtPoids.put(Color.BLUE, 0);   
-        couleursEtPoids.put(Color.GREEN, 0);  
-        couleursEtPoids.put(Color.MAGENTA, 3); 
+        couleursEtPoids.put(Color.MAGENTA, Espece1);
+        couleursEtPoids.put(Color.BLACK, Espece2);      
 
         // Créer une liste de couleurs pondérée basée sur les poids
         ArrayList<Color> couleursPonderees = new ArrayList<>();
@@ -752,7 +827,7 @@ class NueeOiseaux extends JPanel {
         // Sélectionner aléatoirement une couleur pondérée
         Color espece = couleursPonderees.get(new Random().nextInt(couleursPonderees.size()));
         return espece;
-    }
+    }    
 
     public void setRepulsion(double coeffRepulsion) {
         this.coeffRepulsion = coeffRepulsion;
@@ -813,17 +888,17 @@ public class SimulationNueeOiseaux {
    	    // int LargeurEcran = 1730; 
         // int HauteurEcran = 940;
     	// Réglage petit écran 
-        int LargeurEcran = 1255; 
+        int LargeurEcran = 1100; 
         int HauteurEcran = 725;
         
         // espace pour le pannel
-        int PannelSpace = 180;
+        int PannelSpace = 320;
         
         // coté d'une case
         int TailleCase = 100; 
         
         // hauteur plafond
-        int Plafond = 2;
+        int Plafond = 3;
         
         // Modifie l'aspect graphique de l'écran et du pannel
         UIManager.setLookAndFeel(new NimbusLookAndFeel());
@@ -933,6 +1008,12 @@ public class SimulationNueeOiseaux {
             }
         });
 
+        // Ajout un slider pour la répartition de l'espèce rose
+        JSlider EspeceRose = new JSlider(JSlider.HORIZONTAL, 0, 10, 3);
+
+        // Ajout un slider pour la répartition de l'espèce noir
+        JSlider EspeceNoir = new JSlider(JSlider.HORIZONTAL, 0, 10, 3);
+
         // Ajout d'un champ de texte pour entrer le nombre d'oiseaux
         JTextField nbrOiseauxField = new JTextField();
         //Définit une valeur par défaut de 5 oiseaux
@@ -946,11 +1027,13 @@ public class SimulationNueeOiseaux {
                 try { 
                     // On récupère le nombre d'oiseaux entré dans le champ de texte
                     int NombreOiseaux = Integer.parseInt(nbrOiseauxField.getText());
+                    int Espece1 = EspeceRose.getValue();
+                    int Espece2 = EspeceNoir.getValue();
                     if (NombreOiseaux > 10000) {
                         JOptionPane.showMessageDialog(frame, "Veuillez entrer un nombre entre 1 et 10000.", "Erreur", JOptionPane.ERROR_MESSAGE);
                         return; }
                     else {
-                        nueeOiseaux.setNbrOiseaux(NombreOiseaux); }
+                        nueeOiseaux.setNbrOiseaux(NombreOiseaux,Espece1,Espece2); }
                 // Si un nombre non valide est entré
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Veuillez entrer un nombre valide.", "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -986,7 +1069,6 @@ public class SimulationNueeOiseaux {
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         
-        controlPanel.add(Box.createVerticalStrut(20)); // Espacement vertical
         controlPanel.add(new JLabel("Coeff d'attraction:"));
         controlPanel.add(attractionSlider);
         controlPanel.add(Box.createVerticalStrut(20)); 
@@ -1006,14 +1088,20 @@ public class SimulationNueeOiseaux {
         controlPanel.add(new JLabel("Rayon de répulsion:"));
         controlPanel.add(RayonReSlider);
 
-        controlPanel.add(Box.createVerticalStrut(50));
+        controlPanel.add(Box.createVerticalStrut(40));
         controlPanel.add(new JLabel("Vitesse maximale:"));
         controlPanel.add(vitmaxSlider);
         controlPanel.add(Box.createVerticalStrut(20));
         controlPanel.add(new JLabel("Vitesse:"));
         controlPanel.add(speedSlider);
 
-        controlPanel.add(Box.createVerticalStrut(50));
+        controlPanel.add(Box.createVerticalStrut(40));
+        controlPanel.add(new JLabel("Espece Rose: (appuyé sur appliquer)"));
+        controlPanel.add(EspeceRose);
+        controlPanel.add(Box.createVerticalStrut(20));
+        controlPanel.add(new JLabel("Espece Noir: (appuyé sur appliquer)"));
+        controlPanel.add(EspeceNoir);
+        controlPanel.add(Box.createVerticalStrut(20));
         controlPanel.add(new JLabel("Nombre d'oiseaux:"));
         controlPanel.add(nbrOiseauxField);
 
