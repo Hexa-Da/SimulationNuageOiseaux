@@ -282,7 +282,6 @@ class Carte extends JPanel {
 		        	colors[i][j] = Color.decode("#737373");
 		        }else if (n>=0.71 && n < 0.74){
 		        	colors[i][j] = Color.decode("#666666");
-                // System.out.println(i);
 		        //Neige
 		        }else {
 		        	colors[i][j] = Color.WHITE;
@@ -291,13 +290,6 @@ class Carte extends JPanel {
 		}
         return colors;
 	}
-
-    public boolean isMountainOrSnow(double x, double y){
-        Color terrainColor = colors[(int)y][(int)x];
-
-        return terrainColor.equals(Color.WHITE) || terrainColor.equals(Color.decode("#808080")) || 
-                terrainColor.equals(Color.decode("#666666")) || terrainColor.equals(Color.decode("#737373"));
-    }
 
     public static double aleatoire (double min, double max){
         return min + Math.random()*(max-min);
@@ -378,70 +370,14 @@ class Oiseaux {
         if (newX >= largeur) newX = 0;
         if (newY >= hauteur) newY = 0;
 
-        // Éviter les montagnes et la neige
-        if (!carte.isMountainOrSnow(newX, newY) || this.z >= 2) {
-            this.x = newX;
-            this.y = newY;
-        }
-
-        else if (carte.isMountainOrSnow(newX, newY) && this.z < 2) {
-            // Si la nouvelle position est une montagne ou de la neige, changez de direction
-            Random random = new Random();
-            double angle = Math.toRadians(random.nextBoolean() ? 30 : -30); // Randomly choose ±10 degrees
-            double cosTheta = Math.cos(angle);
-            double sinTheta = Math.sin(angle);
-            double newVx = vx * cosTheta - vy * sinTheta;
-            double newVy = vx * sinTheta + vy * cosTheta;
-            this.vx = newVx;
-            this.vy = newVy;
-        }
-
+        this.x = newX;
+        this.y = newY;
         this.z += this.vz * vitesse;
 
         if (this.z <= 1 || this.z >= plafond) {
             this.vz = -this.vz;
         }
     }
-
-    // public void RepulsionMontagne(Colors[][] colors, double CoeffRepulsion, double Vitesse_max, int Rayon, int  Largeur, int Hauteur) { 
-	//     if (voisins.isEmpty()) {
-    //         return;
-    //     }
-        
-    //     int[][] deplacements = {{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},{0,0}};
-    //     double repelX = 0;
-    //     double repelY = 0;
-    
-    //     for (Oiseaux voisin : voisins) {
-    //         // Calculer la distance entre ce boid et le voisin
-    //         ArrayList<Double> Distances_possibles = new ArrayList<>();
-    //         for (int[] dep : deplacements){
-    //             double distance = Math.sqrt(Math.pow(voisin.x+dep[0]*Largeur - this.x, 2) + Math.pow(voisin.y+dep[1]*Largeur - this.y, 2));
-    //             Distances_possibles.add(distance);
-    //         }
-    //         double[] distmin = findMinimum(Distances_possibles);
-    //         double distance = distmin[0];
-    //         int indexmin = (int) distmin[1];
-
-    //         // Si le voisin est trop proche
-    //         if (distance < Rayon) {
-    //             // Calculer la direction pour s'éloigner du voisin
-    //             double directionX = this.x - (voisin.x+deplacements[indexmin][0]*Largeur);
-    //             double directionY = this.y - (voisin.y+deplacements[indexmin][1]*Largeur);
-
-    //             // Normaliser la direction
-    //             double norm = Math.sqrt(directionX * directionX + directionY * directionY);
-    //             if (norm > 0) {
-    //                 directionX /= norm;
-    //                 directionY /= norm;
-    //             }
-                
-    //             // Ajouter à la force de répulsion
-    //             repelX += directionX;
-    //             repelY += directionY;
-    //         }   
-    //     }
-    // }
 
     public static double[] findMinimum(ArrayList<Double> numbers) {
         // Vérifiez si la liste est vide ou null
@@ -680,6 +616,7 @@ class NueeOiseaux extends JPanel {
 	int NombreColonnes, NombreLignes;
 	ArrayList<Cases> grille;
     Carte carte;
+    ArrayList<Oiseaux> ListObstacle;
     
     public NueeOiseaux(int Largeur, int Hauteur, int Plafond, Grille grille, Carte carte) {
         this.NueeOiseaux = new ArrayList<>();  
@@ -693,12 +630,12 @@ class NueeOiseaux extends JPanel {
     	this.NombreColonnes = grille.NombreColonnes; 
     	this.NombreLignes = grille.NombreLignes;
         this.carte = carte;
+        this.ListObstacle = ListMountainAndSnow();
         
         // Créer une minuterie pour mettre à jour la simulation toutes les 10 millisecondes
         Timer timer = new Timer(10, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (!isPaused) {
-                    // isMountainOrSnow();
                     DeplacerOiseaux();
                     Boid();
                     repaint(); // Redessiner la fenêtre
@@ -780,35 +717,34 @@ class NueeOiseaux extends JPanel {
             double z = Math.random() * (Plafond-1) + 1;
             int NumCase = Coord_to_Num(x, y);
             Color espece = Repartition(Espece1,Espece2);
-            if (!carte.isMountainOrSnow(x, y)){
-                Oiseaux oiseau = new Oiseaux(x, y, z, NumCase,espece,carte);
-                NueeOiseaux.add(oiseau);
+            // if (!carte.isMountainOrSnow(x, y)){
+            Oiseaux oiseau = new Oiseaux(x, y, z, NumCase,espece,carte);
+            NueeOiseaux.add(oiseau);
             
-                // on initialise la population de chaque case
-                for (Cases c : grille) {
-                    if (c.NumCase == NumCase) {
-                        c.Population.add(oiseau);
-                    }
+            // on initialise la population de chaque case
+            for (Cases c : grille) {
+                if (c.NumCase == NumCase) {
+                    c.Population.add(oiseau);
                 }
             }
+            
         }
     }
 
-    // public static ArrayList<Oiseau> isMountainOrSnow() {
+    public ArrayList ListMountainAndSnow() {
     
-    //     ArrayList Indice = new ArrayList<Oiseau>();
-    //     for (x=0; x=largeur; x++){
-    //         for (y=0; y=hauteur; y++){
-    //             Color terrainColor = colors[(int)y][(int)x];
-    //             if (terrainColor.equals(Color.WHITE) || terrainColor.equals(Color.decode("#808080")) || 
-    //             terrainColor.equals(Color.decode("#666666")) || terrainColor.equals(Color.decode("#737373"))){
-    //              Oiseaux Montagne = new Oiseaux(x, y, 0, NumCase,Color.RED,carte);
-    //                 Indice.add(Montagne);
-    //             }
-    //         }
-    //     }
-    //     return Indice;
-    // }
+        ArrayList<Oiseaux> Indice = new ArrayList<>();
+        for (int i=0; i < Largeur; i+=10){
+            for (int j=0; j < Hauteur; j+=10){
+                Color terrainColor = carte.colors[j][i];
+                if (terrainColor.equals(Color.WHITE) || terrainColor.equals(Color.decode("#808080")) || terrainColor.equals(Color.decode("#666666")) || terrainColor.equals(Color.decode("#737373"))){
+                    Oiseaux Montagne = new Oiseaux(i, j, 0, Coord_to_Num(i,j), Color.RED, carte);
+                    Indice.add(Montagne);
+                }
+            }
+        }
+        return Indice;
+    }
 
     public Color Repartition(int Espece1, int Espece2) {
         // Définir les couleurs et leurs poids correspondants
@@ -854,7 +790,8 @@ class NueeOiseaux extends JPanel {
                     oiseau1.Repulsion(Voisin,coeffRepulsion,Vitmax,RayonRe, Largeur, Hauteur);
                     oiseau1.Alignement(Voisin,coeffAlignement,Vitmax,RayonAl,RayonRe, Largeur, Hauteur);
                     oiseau1.Attraction(Voisin,coeffAttraction,Vitmax,RayonAt,RayonAl, Largeur, Hauteur);
-                    oiseau1.NormerVitesse(Vitmax);	
+                    oiseau1.NormerVitesse(Vitmax);
+                    oiseau1.Repulsion(ListObstacle,2*0.01,Vitmax,RayonRe,Largeur,Hauteur);	
 					
 				}
 			}
