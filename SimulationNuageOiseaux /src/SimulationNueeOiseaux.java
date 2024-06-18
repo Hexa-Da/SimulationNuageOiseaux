@@ -822,14 +822,14 @@ public class SimulationNueeOiseaux {
     	// Paramètre de simulation
     	
     	// Réglage grand écran
-   	    // int LargeurEcran = 1730; 
-        // int HauteurEcran = 940;
+   	    // int LargeurEcran = 1500; 
+        // int HauteurEcran = 930;
     	// Réglage petit écran 
-        int LargeurEcran = 1100; 
+        int LargeurEcran = 1200; 
         int HauteurEcran = 725;
         
         // espace pour le pannel
-        int PannelSpace = 320;
+        int PannelSpace = 340;
         
         // coté d'une case
         int TailleCase = 100; 
@@ -946,15 +946,15 @@ public class SimulationNueeOiseaux {
         });
 
         // Ajout un slider pour la répartition de l'espèce rose
-        JSlider EspeceRose = new JSlider(JSlider.HORIZONTAL, 0, 10, 3);
+        JSlider EspeceRose = new JSlider(JSlider.HORIZONTAL, 0, 10, 10);
 
         // Ajout un slider pour la répartition de l'espèce noir
-        JSlider EspeceNoir = new JSlider(JSlider.HORIZONTAL, 0, 10, 3);
+        JSlider EspeceNoir = new JSlider(JSlider.HORIZONTAL, 0, 10, 1);
 
         // Ajout d'un champ de texte pour entrer le nombre d'oiseaux
         JTextField nbrOiseauxField = new JTextField();
         //Définit une valeur par défaut de 5 oiseaux
-        nbrOiseauxField.setText("5");
+        nbrOiseauxField.setText("100");
         
         // Ajout d'un bouton pour appliquer le changement
         JButton applyButton = new JButton("Appliquer");
@@ -1033,10 +1033,10 @@ public class SimulationNueeOiseaux {
         controlPanel.add(speedSlider);
 
         controlPanel.add(Box.createVerticalStrut(40));
-        controlPanel.add(new JLabel("Espece Rose: (appuyé sur appliquer)"));
+        controlPanel.add(new JLabel("Espece Rose: (appuyer sur appliquer)"));
         controlPanel.add(EspeceRose);
         controlPanel.add(Box.createVerticalStrut(20));
-        controlPanel.add(new JLabel("Espece Noir: (appuyé sur appliquer)"));
+        controlPanel.add(new JLabel("Espece Noir: (appuyer sur appliquer)"));
         controlPanel.add(EspeceNoir);
         controlPanel.add(Box.createVerticalStrut(20));
         controlPanel.add(new JLabel("Nombre d'oiseaux:"));
