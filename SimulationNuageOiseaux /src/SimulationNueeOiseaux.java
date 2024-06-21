@@ -5,12 +5,12 @@ import java.awt.event.ActionListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.event.KeyEvent;
+import java.awt.Color;
 
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.HashMap;
 import java.util.Map;
-import java.awt.Color;
 
 import java.awt.image.BufferedImage;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
@@ -340,16 +340,14 @@ class Oiseaux {
     double vx, vy, vz;
     int NumCase; 
     Color espece;
-    Carte carte;
    
-    public Oiseaux(double x, double y, double z, int NumCase, Color espece, Carte carte) {
+    public Oiseaux(double x, double y, double z, int NumCase, Color espece) {
     	
         this.x = x;
         this.y = y;
         this.z = z;
         this.NumCase = NumCase;
         this.espece = espece;
-        this.carte = carte;
 
         // Choix de la direction : (random.nextBoolean() ? 1 : -1)
         // Choix de la norm entre 0 et 1 inclus : random.nextInt(101)/100
@@ -717,8 +715,7 @@ class NueeOiseaux extends JPanel {
             double z = Math.random() * (Plafond-1) + 1;
             int NumCase = Coord_to_Num(x, y);
             Color espece = Repartition(Espece1,Espece2);
-            // if (!carte.isMountainOrSnow(x, y)){
-            Oiseaux oiseau = new Oiseaux(x, y, z, NumCase,espece,carte);
+            Oiseaux oiseau = new Oiseaux(x, y, z, NumCase,espece);
             NueeOiseaux.add(oiseau);
             
             // on initialise la population de chaque case
@@ -738,7 +735,7 @@ class NueeOiseaux extends JPanel {
             for (int j=0; j < Hauteur; j+=10){
                 Color terrainColor = carte.colors[j][i];
                 if (terrainColor.equals(Color.WHITE) || terrainColor.equals(Color.decode("#808080")) || terrainColor.equals(Color.decode("#666666")) || terrainColor.equals(Color.decode("#737373"))){
-                    Oiseaux Montagne = new Oiseaux(i, j, 0, Coord_to_Num(i,j), Color.RED, carte);
+                    Oiseaux Montagne = new Oiseaux(i, j, 0, Coord_to_Num(i,j), Color.RED);
                     Indice.add(Montagne);
                 }
             }
@@ -840,7 +837,7 @@ public class SimulationNueeOiseaux {
         // Modifie l'aspect graphique de l'écran et du pannel
         UIManager.setLookAndFeel(new NimbusLookAndFeel());
         
-        // paramètres par défaults
+        // Création de la fenêtre
         JFrame frame = new JFrame("Simulation Nuée d'Oiseaux");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(LargeurEcran+PannelSpace,HauteurEcran);
@@ -1043,13 +1040,15 @@ public class SimulationNueeOiseaux {
         controlPanel.add(nbrOiseauxField);
 
         // Création du panneau pour les boutons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER)); // Utilisation de FlowLayout avec centrage des composants
+        // Utilisation de FlowLayout avec centrage des composants
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER)); 
 
         // Ajout du bouton "Appliquer"
         buttonPanel.add(applyButton);
 
         // Ajout de l'espacement horizontal
-        buttonPanel.add(Box.createHorizontalStrut(20)); // Espacement horizontal de 20 pixels
+        // Espacement horizontal de 20 pixels
+        buttonPanel.add(Box.createHorizontalStrut(20)); 
 
         // Ajout du bouton "Pause"
         buttonPanel.add(pauseButton);
