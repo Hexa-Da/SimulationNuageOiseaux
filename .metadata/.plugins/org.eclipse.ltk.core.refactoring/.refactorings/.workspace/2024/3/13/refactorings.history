@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;SimulationNuageOiseaux&apos;" deleteContents="false" description="Delete resource &apos;SimulationNuageOiseaux&apos;" element1="/SimulationNuageOiseaux" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1711661893076"/>&#x0A;<refactoring comment="Delete resource &apos;SimulationNuageOiseaux.git&apos;" deleteContents="false" description="Delete resource &apos;SimulationNuageOiseaux.git&apos;" element1="/SimulationNuageOiseaux.git" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1711662280460"/>
-</session>
