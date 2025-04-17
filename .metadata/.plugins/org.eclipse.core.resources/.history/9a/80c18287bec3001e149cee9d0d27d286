@@ -1,0 +1,445 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import java.util.ArrayList;
+import java.util.Random;
+
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+
+
+
+
+
+class Oiseau {
+	
+    double x, y;
+    double vx, vy;
+    int NumCase;
+    
+    public Oiseau(double x, double y, int NumCase) {
+        this.x = x;
+        this.y = y;
+        this.NumCase = NumCase;
+        initialiserVitesse(); 
+    }
+    
+    
+    public void initialiserVitesse() {
+        Random random = new Random();
+        // Initialise un vecteur vitesse
+        // Choix de la direction : (random.nextBoolean() ? 1 : -1)
+        // Choix de la norme entre 0 et 1 : random.nextInt(1)
+        this.vx = (random.nextBoolean() ? 1 : -1) * random.nextInt(1);
+        this.vy = (random.nextBoolean() ? 1 : -1) * random.nextInt(1);
+    }
+
+    
+    public void deplacer(int vitesse, int largeur, int hauteur) {
+
+    	x += vx * vitesse;
+        y += vy * vitesse;
+
+        // Rebondir à l'intérieur de la fenêtre
+        if (x < 0 || x > largeur) {
+        	vx = -vx;
+        }
+        if (y < 0 || y > hauteur) {
+        	vy = -vy;
+        }
+        
+        // Traverser la fenêtre
+        //if (x < 0) {
+        //	x = largeur;
+        //}
+        //if (y < 0) {
+        //	y = hauteur;
+        //}
+        //if (x > largeur) {
+        //	x = 0;
+        //}
+        //if (y > hauteur) {
+        //	y = 0;
+        //}
+    }
+
+    
+    // à faire
+    public void Répulsion(double Xo, double Yo, double dt) {
+    	   
+        double kr = 1; //Coefficient de répulsion
+
+        double dx = this.x-Xo;
+        double dy = this.y-Yo;
+
+        double r = Math.sqrt(dx*dx+dy*dy); //Distance entre le Boid considéré et le Boid de coordonnées (Xo,Yo)
+        
+        this.vx = this.vx+kr*dt*dx/Math.pow(r,3); 
+        this.vy = this.vy+kr*dt*dy/Math.pow(r,3); //Mise à jour de la vitesse
+
+        this.x = this.x+dt*this.vx;
+        this.y = this.y+dt*this.vy; //Mise à jour de la position
+    }
+    
+    
+    // à faire
+    public void Alignement(double Vox, double Voy) {
+    	
+	      double kal=1/8; //Coefficient d'alignement (kal < 1)
+	
+	      double N=Math.sqrt(this.vx*this.vx+this.vy*this.vy); //Norme de la vitesse du Boid considéré
+	      double No=Math.sqrt(Vox*Vox+Voy*Voy); //Norme de la vitesse du Boid de vitesse (Vxo,Vyo)
+	
+	      this.vx=N*(this.vx/N+kal*Vox/No)/Math.sqrt((this.vx/N+kal*Vox/No)*(this.vx/N+kal*Vox/No)+(this.vy/N+kal*Voy/No)*(this.vy/N+kal*Voy/No)); //Variation de vx
+	      this.vy=N*(this.vy/N+kal*Voy/No)/Math.sqrt((this.vx/N+kal*Vox/No)*(this.vx/N+kal*Vox/No)+(this.vy/N+kal*Voy/No)*(this.vy/N+kal*Voy/No)); //Variation de vy
+	      //Remarque: la norme de v est inchangée!
+	}
+  
+    
+    //à faire
+    public void Attraction(double Xo, double Yo, double dt) {
+	  
+	      double kat=1; //Coefficient d'attraction
+	
+	      double dx = this.x-Xo;
+	      double dy = this.y-Yo;
+	
+	      double r = Math.sqrt(dx*dx+ dy*dy); //Distance entre les Boids
+	
+	      this.vx=this.vx+kat*dt*-dx/Math.pow(r,3);
+	      this.vy=this.vy+kat*dt*-dy/Math.pow(r,3); //Mise à jour de la vitesse
+	      
+	      this.x = this.x+dt*this.vx;
+	      this.y = this.y+dt*this.vy; //Mise à jour de la position
+  }
+    
+    
+    public void dessiner(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+
+        // Dessiner un curseur sous forme de flèche pour indiquer la direction de l'oiseau
+        double cursorLength = 10; // Longueur du curseur
+        double cursorAngle = Math.atan2(vy, vx); // Angle de la direction de l'oiseau
+
+        // Coordonnées des points de la flèche
+        int[] xPoints = {(int) x, (int) (x - cursorLength * Math.cos(cursorAngle - Math.PI / 8)), 
+                         (int) (x - cursorLength * Math.cos(cursorAngle + Math.PI / 8))};
+        int[] yPoints = {(int) y, (int) (y - cursorLength * Math.sin(cursorAngle - Math.PI / 8)), 
+                         (int) (y - cursorLength * Math.sin(cursorAngle + Math.PI / 8))};
+
+        // Dessiner la flèche
+        Polygon arrow = new Polygon(xPoints, yPoints, 3);
+        g2d.setColor(Color.BLACK); // Couleur de la flèche (noir)
+        g2d.fill(arrow);
+        }
+}
+  
+
+
+
+
+class Case {
+	
+	int NumCase;
+    int X, Y;
+    int CaseLargeur, CaseHauteur;
+    ArrayList<Case> CaseVoisine; 
+
+    public Case(int NumCase, int X, int Y, int CaseLargeur, int CaseHauteur) {
+        this.NumCase = NumCase;
+        this.X = X;
+        this.Y = Y;
+        this.CaseLargeur = CaseLargeur;
+        this.CaseHauteur = CaseHauteur;
+        CaseVoisine = new ArrayList<>();
+    }
+    
+    
+    public void ajouterVoisin(Case voisin) {
+        CaseVoisine.add(voisin);
+    }
+    
+
+    public void dessiner(Graphics2D g2d) {
+        g2d.setColor(Color.BLACK); 
+        g2d.drawRect(X, Y, CaseLargeur, CaseHauteur); 
+    }
+}
+
+
+
+
+
+class Cadrillage extends JPanel {
+	private static final long serialVersionUID = 1L;
+	
+	ArrayList<Case> Cadrillage;
+
+	public Cadrillage(int CaseLargeur, int CaseHauteur, int NombreColonnes, int NombreLignes) {
+        Cadrillage = new ArrayList<>();
+                
+        // Création des cases du cadrillage
+        for (int i = 0; i < NombreLignes; i++) {
+            for (int j = 0; j < NombreColonnes; j++) {
+            	int NumCase = i*NombreColonnes+j;
+            	// Coordonnées du point en haut à gauche de chaque case
+                int X = j*CaseLargeur;
+                int Y = i*CaseHauteur;
+
+                Case nouvelleCase = new Case(NumCase, X, Y, CaseLargeur, CaseHauteur);
+                Cadrillage.add(nouvelleCase);
+            }
+        }
+
+        // Création de la liste des voisins
+        for (int NumCase = 0; NumCase < NombreColonnes*NombreLignes; NumCase++) {
+        	Case c = Cadrillage.get(NumCase);
+        	calculerVoisins(c, NombreColonnes, NombreLignes, Cadrillage);
+        }
+	}
+	
+	  
+    public void calculerVoisins(Case Case, int NombreColonnes, int NombreLignes, ArrayList<Case> Cadrillage) {
+    	// Récupération des infos
+        int X = Case.X;
+        int Y = Case.Y;
+        int NumCase = Case.NumCase;
+        int CaseLargeur = Case.CaseLargeur;
+        int CaseHauteur = Case.CaseHauteur;
+       
+        // Liste des déplacements possibles pour trouver les voisins
+        int[][] deplacements = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+
+        // Parcours des déplacements possibles pour trouver les voisins
+        for (int[] deplacement : deplacements) {
+            int VoisinX = X + deplacement[0]*CaseHauteur;
+            int VoisinY = Y + deplacement[1]*CaseLargeur;
+            
+            // Vérification si le voisin est dans les limites du cadrillage
+            if (VoisinX >= 0 && VoisinX < NombreLignes*CaseHauteur &&
+            		VoisinY >= 0 && VoisinY < NombreColonnes*CaseLargeur) {
+            	
+                // Calcul de l'indice du voisin dans le cadrillage
+            	int VoisinNum = NumCase + deplacement[0] * NombreColonnes + deplacement[1];           	
+                Case voisin = Cadrillage.get(VoisinNum); 
+                Case.ajouterVoisin(voisin);
+            }
+        }
+    }
+    
+	
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
+        //case est un mot clé donc on utilise c
+        for (Case c : Cadrillage) {  
+        	c.dessiner(g2d);
+        }
+	}
+}
+
+
+
+
+
+class NuageOiseaux extends JPanel { 
+	private static final long serialVersionUID = 1L;
+	
+    ArrayList<Oiseau> NuageOiseaux;
+    boolean isPaused = false;
+    int Vitesse = 5; // Vitesse par défaut
+    int NombreOiseaux; 
+    
+    int CaseLargeur, CaseHauteur;
+	int NombreColonnes, NombreLignes;
+    
+    public NuageOiseaux(int NombreOiseaux, int CaseLargeur, int CaseHauteur, int NombreColonnes, int NombreLignes) {
+        NuageOiseaux = new ArrayList<>();
+        	
+        for (int i = 0; i < NombreOiseaux; i++) {
+            double x = Math.random() * getWidth();
+            double y = Math.random() * getHeight();
+            int NumCase = Coord_to_Num(x, y, CaseLargeur, CaseHauteur, NombreColonnes);
+            NuageOiseaux.add(new Oiseau(x, y, NumCase));
+        }
+        
+        // Créer une minuterie pour mettre à jour la simulation toutes les 10 millisecondes
+        Timer timer = new Timer(10, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (!isPaused) {
+                    DeplacerOiseaux(CaseLargeur, CaseHauteur, NombreColonnes, NombreLignes);
+                    repaint(); // Redessiner la fenêtre
+                }
+            }
+        });
+
+        timer.start();
+    }
+    
+    
+    public void DeplacerOiseaux(int CaseLargeur, int CaseHauteur, int NombreColonnes, int NombreLignes) {
+    	int largeur = CaseLargeur*NombreColonnes;
+    	int hauteur = CaseHauteur*NombreLignes;
+        for (Oiseau oiseau : NuageOiseaux) {
+            oiseau.deplacer(Vitesse,largeur,hauteur);
+            int NumCase = Coord_to_Num(oiseau.x, oiseau.y, CaseLargeur, CaseHauteur, NombreColonnes);
+            oiseau.NumCase = NumCase;
+        }
+    }
+    
+    
+    public int Coord_to_Num(double x, double y, int CaseLargeur, int CaseHauteur, int NombreColonnes) {
+        int i = (int) x%CaseHauteur;
+        int j = (int) y%CaseLargeur;
+        return i*NombreColonnes+j;
+    }
+
+    
+    public void setPause(boolean Pause) {
+        isPaused = Pause;
+    }
+  
+    
+    public void setSpeed(int Vitesse) {
+        this.Vitesse = Vitesse;
+    }
+      
+    
+    public void setNbrOiseaux(int NombreOiseaux, int CaseLargeur, int CaseHauteur, int NombreColonnes) {
+        this.NombreOiseaux = NombreOiseaux;
+        updateOiseaux(CaseLargeur, CaseHauteur, NombreColonnes);
+    }
+     
+    
+    public void updateOiseaux(int CaseLargeur, int CaseHauteur, int NombreColonnes) {
+        NuageOiseaux.clear();
+        for (int i = 0; i < NombreOiseaux; i++) {
+            double x = Math.random() * getWidth();
+            double y = Math.random() * getHeight();
+            int NumCase = Coord_to_Num(x, y, CaseLargeur, CaseHauteur, NombreColonnes);
+            NuageOiseaux.add(new Oiseau((int) x, (int) y, (int) NumCase));
+        }
+    }
+     
+    
+    // à faire
+    public void Boid() {
+		for (Oiseau oiseau : NuageOiseaux) {
+	        //oiseau.Répulsion(double Xo, double Yo, double dt);
+	        //oiseau.Alignement(double Vox, double Voy);
+	        //oiseau.Attraction(double Xo, double Yo, double dt);
+	    }
+	}
+    
+    
+    public void paintComponent(Graphics g) {
+    	super.paintComponent(g);
+    	Graphics2D g2d = (Graphics2D) g;
+        
+        for (Oiseau oiseau : NuageOiseaux) {
+        	oiseau.dessiner(g2d);
+        }    
+    }
+}
+
+
+
+
+
+public class SimulationNuageOiseaux {
+	
+    private static boolean isPaused = false;
+
+    public static void main(String[] args) {
+        int LargeurEcran = 1440; //1440
+        int HauteurEcran = 800;  //880
+        int PannelSpace = 80; //80
+        
+        // Paramètre par défault
+        JFrame frame = new JFrame("Simulation Nuage d'Oiseaux");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(LargeurEcran, HauteurEcran+PannelSpace);
+        
+        int NombreColonnes = 144; //144
+        int NombreLignes = 80; //80
+        
+        int CaseLargeur = LargeurEcran/NombreColonnes; 
+        int CaseHauteur = HauteurEcran/NombreLignes; 
+        
+        // Créer un panneau pour le cadrillage
+        // Rappel : Cadrillage(int LargeurEcran, int HauteurEcran, int NombreColonnes, int NombreLignes)
+        Cadrillage cadrillage = new Cadrillage(CaseLargeur, CaseHauteur, NombreColonnes, NombreLignes);
+        frame.add(cadrillage);
+        
+        // Créer un nuage d'oiseaux sur le cadrillage
+        NuageOiseaux nuageOiseaux = new NuageOiseaux(50, CaseLargeur, CaseHauteur, NombreColonnes, NombreLignes); // Nombre d'oiseaux initial (à revoir)
+
+//        // Créer un panneau de superposition
+//        JPanel overlayPanel = new JPanel();
+//        overlayPanel.setLayout(new OverlayLayout(overlayPanel));
+//
+//        // Ajouter les composants au panneau de superposition
+//        overlayPanel.add(cadrillage);
+//        //overlayPanel.add(nuageOiseaux);
+//
+//        // Ajouter le panneau de superposition à la fenêtre
+//        frame.add(overlayPanel);
+        
+        // Ajout d'un bouton de pause
+        JButton pauseButton = new JButton("Pause");
+        pauseButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                isPaused = !isPaused;
+                nuageOiseaux.setPause(isPaused);
+            }
+        });
+
+        // Ajout d'un slider pour la vitesse
+        JSlider speedSlider = new JSlider(JSlider.HORIZONTAL, 1, 10, 5);
+        speedSlider.setMajorTickSpacing(1);
+        speedSlider.setPaintTicks(true);
+        speedSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                int Vitesse = speedSlider.getValue();
+                nuageOiseaux.setSpeed(Vitesse);
+            }
+        });
+
+        // Ajout d'un champ de texte pour entrer le nombre d'oiseaux
+        JTextField nbrOiseauxField = new JTextField(5);
+        nbrOiseauxField.setText("?"); // Valeur par défaut
+
+        // Ajout d'un bouton pour appliquer le changement
+        JButton applyButton = new JButton("Appliquer");
+        applyButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int NombreOiseaux = Integer.parseInt(nbrOiseauxField.getText());
+                    nuageOiseaux.setNbrOiseaux(NombreOiseaux, CaseLargeur, CaseHauteur, NombreColonnes); 
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Veuillez entrer un nombre valide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // Création du panneau de contrôle
+        JPanel controlPanel = new JPanel();
+        controlPanel.add(pauseButton);
+        controlPanel.add(new JLabel("Vitesse:"));
+        controlPanel.add(speedSlider);
+        controlPanel.add(new JLabel("Nombre d'oiseaux:"));
+        controlPanel.add(nbrOiseauxField);
+        controlPanel.add(applyButton);
+
+        frame.add(controlPanel, BorderLayout.SOUTH);
+        frame.setVisible(true);
+    }
+}
+
+
+
+
