@@ -41,6 +41,18 @@ Le projet est organisé en plusieurs classes principales :
 - `Grille` : Système de quadrillage pour l'optimisation
 - `Cases` : Unités de la grille pour la détection de voisinage
 
+## Branches du Projet
+
+- **Branch `main`** : Version originale du projet rendue pour la deadline. Cette version contient l'implémentation initiale réalisée en groupe.
+
+- **Branch `edit-PA`** : Version personnelle améliorée après la deadline. Cette branche contient plusieurs améliorations :
+  - Optimisation des performances pour gérer un plus grand nombre d'oiseaux
+  - Amélioration de la génération de terrain avec Perlin Noise
+  - Interface utilisateur plus intuitive
+  - Meilleure gestion des collisions
+  - Code restructuré et commenté
+  - Correction de bugs mineurs
+
 ## Installation et Exécution
 
 1. Assurez-vous d'avoir Java installé sur votre système
@@ -66,3 +78,8 @@ Ce projet a été réalisé en groupe dans le cadre d'un projet de première ann
 - Le projet utilise des opérations non vérifiées (unchecked operations) pour certaines collections
 - Les paramètres de simulation sont ajustables pour trouver le meilleur équilibre entre réalisme et performance
 - Le système de collision est optimisé pour gérer un grand nombre d'oiseaux
+
+# Simulation de Nuée d'Oiseaux
+
+Ce projet a été réalisé dans le cadre de la première année d'école d'ingénieur. Il s'agit d'une simulation interactive de vol d'oiseaux en nuée (flocking behavior) implémentée en Java, basée sur les règles de Boids de Craig Reynolds.
+
